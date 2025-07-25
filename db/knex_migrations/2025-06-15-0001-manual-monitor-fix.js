@@ -2,7 +2,7 @@
 exports.up = function (knex) {
     return knex.schema
         .alterTable("monitor", function (table) {
-            table.smallint("manual_status").alter();
+            table.integer("manual_status").alter();
         });
 };
 
