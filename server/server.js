@@ -309,6 +309,10 @@ let needSetup = false;
     const apiRouter = require("./routers/api-router");
     app.use(apiRouter);
 
+    // Monitor REST API Router
+    const monitorAPIRouter = require("./routers/monitor-api-router");
+    app.use(monitorAPIRouter);
+
     // Status Page Router
     const statusPageRouter = require("./routers/status-page-router");
     app.use(statusPageRouter);
