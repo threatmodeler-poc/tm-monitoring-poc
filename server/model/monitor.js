@@ -24,7 +24,7 @@ const Gamedig = require("gamedig");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const Database = require("../database");
-const { UptimeCalculator } = require("../uptime-calculator");
+const { UptimeCalculator } = require("../uptime-calculator");   
 const { CookieJar } = require("tough-cookie");
 const { HttpsCookieAgent } = require("http-cookie-agent/http");
 const https = require("https");
@@ -106,8 +106,8 @@ class Monitor extends BeanModel {
             port: this.port,
             maxretries: this.maxretries,
             weight: this.weight,
-            active: preloadData.activeStatus.get(this.id),
-            forceInactive: preloadData.forceInactive.get(this.id),
+            active: !!preloadData.activeStatus.get(this.id),
+            forceInactive: !!preloadData.forceInactive.get(this.id),
             type: this.type,
             timeout: this.timeout,
             interval: this.interval,
@@ -349,6 +349,9 @@ class Monitor extends BeanModel {
         let previousBeat = null;
         let retries = 0;
 
+        // Explicitly set isStop to false when starting a monitor
+        this.isStop = false;
+        
         this.prometheus = new Prometheus(this);
 
         const beat = async () => {
@@ -979,16 +982,25 @@ class Monitor extends BeanModel {
             let endTimeDayjs = await uptimeCalculator.update(bean.status, parseFloat(bean.ping));
             bean.end_time = R.isoDateTimeMillis(endTimeDayjs);
 
-            // Send to frontend
-            log.debug("monitor", `[${this.name}] Send to socket`);
+            // Store to database first to get the auto-incremented ID
+            await R.store(bean);
+            
+            // For MSSQL, RedBeanPHP may not properly return the identity value
+            // If ID is still null/undefined, fetch it from the database
+            if (!bean.id && Database.dbConfig?.type === "mssql") {
+                const lastInserted = await R.findOne("heartbeat", 
+                    "monitor_id = ? ORDER BY time DESC", 
+                    [this.id]
+                );
+                if (lastInserted) {
+                    bean.id = lastInserted.id;
+                }
+            }
+
+            // Send to frontend after storing to ensure ID is available
             io.to(this.user_id).emit("heartbeat", bean.toJSON());
             Monitor.sendStats(io, this.id, this.user_id);
 
-            // Store to database
-            log.debug("monitor", `[${this.name}] Store`);
-            await R.store(bean);
-
-            log.debug("monitor", `[${this.name}] prometheus.update`);
             this.prometheus?.update(bean, tlsInfo);
 
             previousBeat = bean;
@@ -1196,7 +1208,8 @@ class Monitor extends BeanModel {
     static async isActive(monitorID, active) {
         const parentActive = await Monitor.isParentActive(monitorID);
 
-        return (active === 1) && parentActive;
+        // Convert active to boolean to handle MSSQL returning strings/numbers
+        return (!!active && active !== 0 && active !== "0") && parentActive;
     }
 
     /**
@@ -1739,7 +1752,8 @@ class Monitor extends BeanModel {
         }
 
         const parentActive = await Monitor.isParentActive(parent.id);
-        return parent.active && parentActive;
+        // Convert parent.active to boolean to handle MSSQL returning strings/numbers
+        return (!!parent.active && parent.active !== 0 && parent.active !== "0") && parentActive;
     }
 
     /**

@@ -15,7 +15,11 @@ async function startMonitor(userID, monitorID) {
         throw new Error("You do not own this monitor.");
     }
     await R.exec("UPDATE monitor SET active = 1 WHERE id = ? AND user_id = ? ", [monitorID, userID]);
-    let monitor = await R.findOne("monitor", " id = ? ", [monitorID]);
+    
+    // Get monitor as proper Monitor instance
+    let monitorData = await R.getRow("SELECT * FROM monitor WHERE id = ? ", [monitorID]);
+    let monitor = R.convertToBeans("monitor", [monitorData])[0];
+    
     if (monitor.id in server.monitorList) {
         await server.monitorList[monitor.id].stop();
     }

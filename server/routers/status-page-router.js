@@ -7,6 +7,8 @@ const { R } = require("redbean-node");
 const { badgeConstants } = require("../../src/util");
 const { makeBadge } = require("badge-maker");
 const { UptimeCalculator } = require("../uptime-calculator");
+const Database = require("../database");
+const { queryWithLimit, getTopClause } = require("../utils/database-utils");
 
 let router = express.Router();
 
@@ -76,23 +78,20 @@ router.get("/api/status-page/heartbeat/:slug", cache("1 minutes"), async (reques
         let statusPageID = await StatusPage.slugToID(slug);
 
         let monitorIDList = await R.getCol(`
-            SELECT monitor_group.monitor_id FROM monitor_group, \`group\`
-            WHERE monitor_group.group_id = \`group\`.id
-            AND public = 1
-            AND \`group\`.status_page_id = ?
+            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
+            WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+            AND [public] = 1
+            AND ${Database.escapeIdentifier('group')}.status_page_id = ?
         `, [
             statusPageID
         ]);
 
         for (let monitorID of monitorIDList) {
-            let list = await R.getAll(`
-                    SELECT * FROM heartbeat
-                    WHERE monitor_id = ?
-                    ORDER BY time DESC
-                    LIMIT 100
-            `, [
-                monitorID,
-            ]);
+            let list = await queryWithLimit(`
+                SELECT * FROM heartbeat
+                WHERE monitor_id = ?
+                ORDER BY time DESC
+            `, [monitorID], 100);
 
             list = R.convertToBeans("heartbeat", list);
             heartbeatList[monitorID] = list.reverse().map(row => row.toPublicJSON());
@@ -164,10 +163,10 @@ router.get("/api/status-page/:slug/badge", cache("5 minutes"), async (request, r
 
     try {
         let monitorIDList = await R.getCol(`
-            SELECT monitor_group.monitor_id FROM monitor_group, \`group\`
-            WHERE monitor_group.group_id = \`group\`.id
-            AND public = 1
-            AND \`group\`.status_page_id = ?
+            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
+            WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+            AND [public] = 1
+            AND ${Database.escapeIdentifier('group')}.status_page_id = ?
         `, [
             statusPageID
         ]);
@@ -178,14 +177,11 @@ router.get("/api/status-page/:slug/badge", cache("5 minutes"), async (request, r
 
         for (let monitorID of monitorIDList) {
             // retrieve the latest heartbeat
-            let beat = await R.getAll(`
-                    SELECT * FROM heartbeat
-                    WHERE monitor_id = ?
-                    ORDER BY time DESC
-                    LIMIT 1
-            `, [
-                monitorID,
-            ]);
+            let beat = await queryWithLimit(`
+                SELECT * FROM heartbeat
+                WHERE monitor_id = ?
+                ORDER BY time DESC
+            `, [monitorID], 1);
 
             // to be sure, when corresponding monitor not found
             if (beat.length === 0) {

@@ -67,6 +67,52 @@ async function verifyAPIKey(key) {
 }
 
 /**
+ * Get user associated with API key
+ * @param {string} key API key to verify  
+ * @returns {Promise<object|null>} User object or null if invalid
+ */
+async function getUserFromAPIKey(key) {
+    if (typeof key !== "string") {
+        return null;
+    }
+
+    // Verify the API key format (uk prefix + key ID + underscore + clear key)
+    if (!key.startsWith("uk") || !key.includes("_")) {
+        return null;
+    }
+
+    // Extract key ID and clear key
+    let index = key.substring(2, key.indexOf("_"));
+    let clear = key.substring(key.indexOf("_") + 1, key.length);
+
+    // Find the API key record
+    let apiKeyRecord = await R.findOne("api_key", " id=? ", [ index ]);
+
+    if (apiKeyRecord === null) {
+        return null;
+    }
+
+    // Check if API key is active and not expired
+    let current = dayjs();
+    let expiry = dayjs(apiKeyRecord.expires);
+    if (expiry.diff(current) < 0 || !apiKeyRecord.active) {
+        return null;
+    }
+
+    // Verify the key hash
+    if (!passwordHash.verify(clear, apiKeyRecord.key)) {
+        return null;
+    }
+
+    // Get the user associated with this API key
+    let user = await R.findOne("user", " id = ? AND active = 1 ", [ apiKeyRecord.user_id ]);
+    
+    return user;
+}
+
+exports.getUserFromAPIKey = getUserFromAPIKey;
+
+/**
  * Callback for basic auth authorizers
  * @callback authCallback
  * @param {any} err Any error encountered

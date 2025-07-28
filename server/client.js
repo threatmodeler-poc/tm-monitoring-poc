@@ -9,6 +9,7 @@ const io = server.io;
 const { setting } = require("./util-server");
 const checkVersion = require("./check-version");
 const Database = require("./database");
+const { queryWithLimit } = require("./utils/database-utils");
 
 /**
  * Send list of notification providers to client
@@ -46,14 +47,11 @@ async function sendNotificationList(socket) {
  * @returns {Promise<void>}
  */
 async function sendHeartbeatList(socket, monitorID, toUser = false, overwrite = false) {
-    let list = await R.getAll(`
+    let list = await queryWithLimit(`
         SELECT * FROM heartbeat
         WHERE monitor_id = ?
         ORDER BY time DESC
-        LIMIT 100
-    `, [
-        monitorID,
-    ]);
+    `, [monitorID], 100);
 
     let result = list.reverse();
 
@@ -75,14 +73,14 @@ async function sendHeartbeatList(socket, monitorID, toUser = false, overwrite = 
 async function sendImportantHeartbeatList(socket, monitorID, toUser = false, overwrite = false) {
     const timeLogger = new TimeLogger();
 
-    let list = await R.find("heartbeat", `
-        monitor_id = ?
-        AND important = 1
+    let list = await queryWithLimit(`
+        SELECT * FROM heartbeat
+        WHERE monitor_id = ? AND important = 1
         ORDER BY time DESC
-        LIMIT 500
-    `, [
-        monitorID,
-    ]);
+    `, [monitorID], 500);
+
+    // Convert to beans
+    list = R.convertToBeans("heartbeat", list);
 
     timeLogger.print(`[Monitor: ${monitorID}] sendImportantHeartbeatList`);
 

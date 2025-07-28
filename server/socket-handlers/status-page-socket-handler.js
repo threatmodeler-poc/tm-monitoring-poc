@@ -180,7 +180,7 @@ module.exports.statusPageSocketHandler = (socket) => {
             for (let group of publicGroupList) {
                 let groupBean;
                 if (group.id) {
-                    groupBean = await R.findOne("group", " id = ? AND public = 1 AND status_page_id = ? ", [
+                    groupBean = await R.findOne("group", " id = ? AND [public] = 1 AND status_page_id = ? ", [
                         group.id,
                         statusPage.id
                     ]);

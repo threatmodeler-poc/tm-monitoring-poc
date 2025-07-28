@@ -99,6 +99,7 @@ Notification.init();
 
 log.debug("server", "Importing Database");
 const Database = require("./database");
+const { queryWithLimit } = require("./utils/database-utils");
 
 log.debug("server", "Importing Background Jobs");
 const { initBackgroundJobs, stopBackgroundJobs } = require("./jobs");
@@ -1058,6 +1059,29 @@ let needSetup = false;
 
                 const startTime = Date.now();
 
+                // Delete related records first to handle MSSQL foreign key constraints
+                // Even though CASCADE is defined, MSSQL might need explicit deletion
+                log.info("manage", `Deleting related records for monitor: ${monitorID}`);
+                
+                // Delete statistics tables
+                await R.exec("DELETE FROM stat_minutely WHERE monitor_id = ?", [monitorID]);
+                await R.exec("DELETE FROM stat_hourly WHERE monitor_id = ?", [monitorID]);
+                await R.exec("DELETE FROM stat_daily WHERE monitor_id = ?", [monitorID]);
+                
+                // Delete heartbeats
+                await R.exec("DELETE FROM heartbeat WHERE monitor_id = ?", [monitorID]);
+                
+                // Delete monitor associations
+                await R.exec("DELETE FROM monitor_group WHERE monitor_id = ?", [monitorID]);
+                await R.exec("DELETE FROM monitor_maintenance WHERE monitor_id = ?", [monitorID]);
+                await R.exec("DELETE FROM monitor_notification WHERE monitor_id = ?", [monitorID]);
+                await R.exec("DELETE FROM monitor_tag WHERE monitor_id = ?", [monitorID]);
+                await R.exec("DELETE FROM monitor_tls_info WHERE monitor_id = ?", [monitorID]);
+                
+                // Delete notification history
+                await R.exec("DELETE FROM notification_sent_history WHERE monitor_id = ?", [monitorID]);
+                
+                // Finally delete the monitor itself
                 await R.exec("DELETE FROM monitor WHERE id = ? AND user_id = ? ", [
                     monitorID,
                     socket.userID,
@@ -1281,28 +1305,21 @@ let needSetup = false;
 
                 let list;
                 if (monitorID == null) {
-                    list = await R.find("heartbeat", `
-                        important = 1
+                    list = await queryWithLimit(`
+                        SELECT * FROM heartbeat
+                        WHERE important = 1
                         ORDER BY time DESC
-                        LIMIT ?
-                        OFFSET ?
-                    `, [
-                        count,
-                        offset,
-                    ]);
+                    `, [], count, offset);
                 } else {
-                    list = await R.find("heartbeat", `
-                        monitor_id = ?
-                        AND important = 1
+                    list = await queryWithLimit(`
+                        SELECT * FROM heartbeat
+                        WHERE monitor_id = ? AND important = 1
                         ORDER BY time DESC
-                        LIMIT ?
-                        OFFSET ?
-                    `, [
-                        monitorID,
-                        count,
-                        offset,
-                    ]);
+                    `, [monitorID], count, offset);
                 }
+
+                // Convert to beans
+                list = R.convertToBeans("heartbeat", list);
 
                 callback({
                     ok: true,
@@ -1784,6 +1801,9 @@ async function startMonitor(userID, monitorID) {
         await server.monitorList[monitor.id].stop();
     }
 
+    // Make sure isStop is explicitly set to false when resuming a monitor
+    monitor.isStop = false;
+    
     server.monitorList[monitor.id] = monitor;
     await monitor.start(io);
 }

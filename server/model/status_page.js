@@ -222,7 +222,7 @@ class StatusPage extends BeanModel {
         // Public Group List
         const showTags = !!statusPage.show_tags;
 
-        const list = await R.find("group", " public = 1 AND status_page_id = ? ORDER BY weight ", [
+        const list = await R.find("group", " [public] = 1 AND status_page_id = ? ORDER BY weight ", [
             statusPage.id
         ]);
 
@@ -278,7 +278,7 @@ class StatusPage extends BeanModel {
         const publicGroupList = [];
         const showTags = !!statusPage.show_tags;
 
-        const list = await R.find("group", " public = 1 AND status_page_id = ? ORDER BY weight ", [
+        const list = await R.find("group", " [public] = 1 AND status_page_id = ? ORDER BY weight ", [
             statusPage.id
         ]);
 

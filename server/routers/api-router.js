@@ -116,6 +116,18 @@ router.all("/api/push/:pushToken", async (request, response) => {
 
         await R.store(bean);
 
+        // For MSSQL, RedBeanPHP may not properly return the identity value
+        // If ID is still null/undefined, fetch it from the database
+        if (!bean.id && Database.dbConfig?.type === "mssql") {
+            const lastInserted = await R.findOne("heartbeat", 
+                "monitor_id = ? ORDER BY time DESC", 
+                [monitor.id]
+            );
+            if (lastInserted) {
+                bean.id = lastInserted.id;
+            }
+        }
+
         io.to(monitor.user_id).emit("heartbeat", bean.toJSON());
 
         Monitor.sendStats(io, monitor.id, monitor.user_id);
@@ -157,7 +169,7 @@ router.get("/api/badge/:id/status", cache("5 minutes"), async (request, response
                 SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
                 WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
                 AND monitor_group.monitor_id = ?
-                AND public = 1
+                AND [public] = 1
             `,
         [ requestedMonitorId ]
         );
@@ -240,7 +252,7 @@ router.get("/api/badge/:id/uptime/:duration?", cache("5 minutes"), async (reques
                 SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
                 WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
                 AND monitor_group.monitor_id = ?
-                AND public = 1
+                AND [public] = 1
             `,
         [ requestedMonitorId ]
         );
@@ -373,7 +385,7 @@ router.get("/api/badge/:id/avg-response/:duration?", cache("5 minutes"), async (
             WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
             AND heartbeat.time > ${sqlHourOffset}
             AND heartbeat.ping IS NOT NULL
-            AND public = 1
+            AND [public] = 1
             AND heartbeat.monitor_id = ?
             `,
         [ -requestedDuration, requestedMonitorId ]
@@ -441,7 +453,7 @@ router.get("/api/badge/:id/cert-exp", cache("5 minutes"), async (request, respon
             SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
             WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
             AND monitor_group.monitor_id = ?
-            AND public = 1
+            AND [public] = 1
             `,
         [ requestedMonitorId ]
         );
@@ -526,7 +538,7 @@ router.get("/api/badge/:id/response", cache("5 minutes"), async (request, respon
             SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
             WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
             AND monitor_group.monitor_id = ?
-            AND public = 1
+            AND [public] = 1
             `,
         [ requestedMonitorId ]
         );

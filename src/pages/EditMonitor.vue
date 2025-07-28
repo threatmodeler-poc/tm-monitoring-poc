@@ -1173,6 +1173,7 @@ const monitorDefaults = {
     expiryNotification: false,
     maxredirects: 10,
     accepted_statuscodes: [ "200-299" ],
+    active: true,
     dns_resolve_type: "A",
     dns_resolve_server: "1.1.1.1",
     docker_container: "",

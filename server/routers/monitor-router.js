@@ -8,6 +8,7 @@ const { getUserFromAPIKey } = require("../auth");
 const server = UptimeKumaServer.getInstance();
 const { updateMonitorNotification } = require("../utils/monitor-utils");
 const { startMonitor } = require("../utils/monitor-actions");
+const { storeWithAutoFallback } = require("../utils/database-utils");
 
 // POST /api/monitor - Add a new monitor
 router.post("/monitor", async (req, res) => {
@@ -83,14 +84,21 @@ router.post("/monitor", async (req, res) => {
         bean.user_id = userID;
 
         bean.validate();
-        await R.store(bean);
+        
+        // Use the database utility to store with guaranteed ID
+        bean = await storeWithAutoFallback(bean, "monitor", ["user_id"]);
+        
+        console.log(`Stored monitor with ID: ${bean.id}`);
+        
         await updateMonitorNotification(bean.id, notificationIDList);
-        await server.sendUpdateMonitorIntoList({ userID }, bean.id);
+        // Create a socket-like object with userID for the server method
+        await server.sendUpdateMonitorIntoList({ userID: userID }, bean.id);
         if (monitor.active !== false) {
             await startMonitor(userID, bean.id);
         }
         res.json({ ok: true, msg: "successAdded", monitorID: bean.id });
     } catch (e) {
+        console.error("Error adding monitor:", e.message);
         res.status(500).json({ ok: false, msg: e.message });
     }
 });

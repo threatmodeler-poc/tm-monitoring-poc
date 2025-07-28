@@ -377,16 +377,22 @@ class UptimeCalculator {
             return this.lastDailyStatBean;
         }
 
-        let bean = await R.findOne("stat_daily", " monitor_id = ? AND timestamp = ?", [
-            this.monitorID,
-            timestamp,
-        ]);
-
-        if (!bean) {
-            bean = R.dispense("stat_daily");
-            bean.monitor_id = this.monitorID;
-            bean.timestamp = timestamp;
-        }
+        // Import database utils for upsert functionality
+        const { upsert } = require("./utils/database-utils");
+        
+        // Use upsert to handle concurrent access properly
+        const beanData = {
+            monitor_id: this.monitorID,
+            timestamp: timestamp,
+            up: 0,
+            down: 0,
+            ping: 0,     // Default to 0 instead of null for MSSQL NOT NULL constraint
+            pingMin: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
+            pingMax: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
+            extras: null
+        };
+        
+        let bean = await upsert("stat_daily", beanData, ["monitor_id", "timestamp"]);
 
         this.lastDailyStatBean = bean;
         return this.lastDailyStatBean;
@@ -402,16 +408,22 @@ class UptimeCalculator {
             return this.lastHourlyStatBean;
         }
 
-        let bean = await R.findOne("stat_hourly", " monitor_id = ? AND timestamp = ?", [
-            this.monitorID,
-            timestamp,
-        ]);
-
-        if (!bean) {
-            bean = R.dispense("stat_hourly");
-            bean.monitor_id = this.monitorID;
-            bean.timestamp = timestamp;
-        }
+        // Import database utils for upsert functionality
+        const { upsert } = require("./utils/database-utils");
+        
+        // Use upsert to handle concurrent access properly
+        const beanData = {
+            monitor_id: this.monitorID,
+            timestamp: timestamp,
+            up: 0,
+            down: 0,
+            ping: 0,     // Default to 0 instead of null for MSSQL NOT NULL constraint
+            pingMin: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
+            pingMax: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
+            extras: null
+        };
+        
+        let bean = await upsert("stat_hourly", beanData, ["monitor_id", "timestamp"]);
 
         this.lastHourlyStatBean = bean;
         return this.lastHourlyStatBean;
@@ -427,17 +439,23 @@ class UptimeCalculator {
             return this.lastMinutelyStatBean;
         }
 
-        let bean = await R.findOne("stat_minutely", " monitor_id = ? AND timestamp = ?", [
-            this.monitorID,
-            timestamp,
-        ]);
-
-        if (!bean) {
-            bean = R.dispense("stat_minutely");
-            bean.monitor_id = this.monitorID;
-            bean.timestamp = timestamp;
-        }
-
+        // Import database utils for upsert functionality
+        const { upsert } = require("./utils/database-utils");
+        
+        // Use upsert to handle concurrent access properly
+        const beanData = {
+            monitor_id: this.monitorID,
+            timestamp: timestamp,
+            up: 0,
+            down: 0,
+            ping: 0,     // Default to 0 instead of null for MSSQL NOT NULL constraint
+            pingMin: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
+            pingMax: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
+            extras: null
+        };
+        
+        let bean = await upsert("stat_minutely", beanData, ["monitor_id", "timestamp"]);
+        
         this.lastMinutelyStatBean = bean;
         return this.lastMinutelyStatBean;
     }

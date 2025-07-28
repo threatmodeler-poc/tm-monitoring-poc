@@ -1,6 +1,9 @@
 const { BeanModel } = require("redbean-node/dist/bean-model");
 const { R } = require("redbean-node");
 const dayjs = require("dayjs");
+const { log } = require("../../src/util");
+const { storeWithAutoFallback } = require("../utils/database-utils");
+const Database = require("../database");
 
 class APIKey extends BeanModel {
     /**
@@ -67,8 +70,10 @@ class APIKey extends BeanModel {
         bean.active = key.active;
         bean.expires = key.expires;
 
-        await R.store(bean);
-
+        // Use the database utility to store with guaranteed ID
+        bean = await storeWithAutoFallback(bean, "api_key", ["user_id", "name", "key"]);
+        
+        log.debug("apikeys", `Stored API key with ID: ${bean.id}`);
         return bean;
     }
 }
