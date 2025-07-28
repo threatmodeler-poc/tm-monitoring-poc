@@ -3,6 +3,7 @@ const passwordHash = require("../password-hash");
 const { R } = require("redbean-node");
 const jwt = require("jsonwebtoken");
 const { shake256, SHAKE256_LENGTH } = require("../util-server");
+const Database = require("../database");
 
 class User extends BeanModel {
     /**
@@ -13,7 +14,7 @@ class User extends BeanModel {
      * @returns {Promise<void>}
      */
     static async resetPassword(userID, newPassword) {
-        await R.exec("UPDATE `user` SET password = ? WHERE id = ? ", [
+        await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET password = ? WHERE id = ? `, [
             await passwordHash.generate(newPassword),
             userID
         ]);
@@ -27,7 +28,7 @@ class User extends BeanModel {
     async resetPassword(newPassword) {
         const hashedPassword = await passwordHash.generate(newPassword);
 
-        await R.exec("UPDATE `user` SET password = ? WHERE id = ? ", [
+        await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET password = ? WHERE id = ? `, [
             hashedPassword,
             this.id
         ]);

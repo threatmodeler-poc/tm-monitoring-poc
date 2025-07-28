@@ -17,6 +17,7 @@ const postgresConParse = require("pg-connection-string").parse;
 const mysql = require("mysql2");
 const { NtlmClient } = require("./modules/axios-ntlm/lib/ntlmClient.js");
 const { Settings } = require("./settings");
+const Database = require("./database");
 const grpc = require("@grpc/grpc-js");
 const protojs = require("protobufjs");
 const radiusClient = require("node-radius-client");
@@ -43,7 +44,7 @@ const isWindows = process.platform === /^win/.test(process.platform);
  * @returns {Promise<Bean>} JWT secret
  */
 exports.initJWTSecret = async () => {
-    let jwtSecretBean = await R.findOne("setting", " `key` = ? ", [
+    let jwtSecretBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, [
         "jwtSecret",
     ]);
 

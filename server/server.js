@@ -415,8 +415,13 @@ let needSetup = false;
 
             let user = await login(data.username, data.password);
 
+            log.debug("auth", `Login result for user ${data.username}: ${user ? 'SUCCESS' : 'FAILED'}`);
+
             if (user) {
-                if (user.twofa_status === 0) {
+                log.debug("auth", `User 2FA status: ${user.twofa_status}`);
+                // Handle both integer 0 and boolean false for 2FA disabled
+                if (user.twofa_status === 0 || user.twofa_status === false) {
+                    log.debug("auth", `Calling afterLogin for user ${data.username}`);
                     await afterLogin(socket, user);
 
                     log.info("auth", `Successfully logged in user ${data.username}. IP=${clientIP}`);
@@ -427,7 +432,8 @@ let needSetup = false;
                     });
                 }
 
-                if (user.twofa_status === 1 && !data.token) {
+                // Handle both integer 1 and boolean true for 2FA enabled
+                if ((user.twofa_status === 1 || user.twofa_status === true) && !data.token) {
 
                     log.info("auth", `2FA token required for user ${data.username}. IP=${clientIP}`);
 
@@ -442,7 +448,7 @@ let needSetup = false;
                     if (user.twofa_last_token !== data.token && verify) {
                         await afterLogin(socket, user);
 
-                        await R.exec("UPDATE `user` SET twofa_last_token = ? WHERE id = ? ", [
+                        await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET twofa_last_token = ? WHERE id = ? `, [
                             data.token,
                             socket.userID,
                         ]);
@@ -515,7 +521,7 @@ let needSetup = false;
 
                     let uri = `otpauth://totp/Uptime%20Kuma:${user.username}?secret=${encodedSecret}`;
 
-                    await R.exec("UPDATE `user` SET twofa_secret = ? WHERE id = ? ", [
+                    await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET twofa_secret = ? WHERE id = ? `, [
                         newSecret,
                         socket.userID,
                     ]);
@@ -550,7 +556,7 @@ let needSetup = false;
                 checkLogin(socket);
                 await doubleCheckPassword(socket, currentPassword);
 
-                await R.exec("UPDATE `user` SET twofa_status = 1 WHERE id = ? ", [
+                await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET twofa_status = 1 WHERE id = ? `, [
                     socket.userID,
                 ]);
 
@@ -1711,7 +1717,9 @@ async function afterLogin(socket, user) {
 
     // Set server timezone from client browser if not set
     // It should be run once only
-    if (! await Settings.get("initServerTimezone")) {
+    // Use direct database query to avoid circular dependency issues
+    let initTimezoneBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["initServerTimezone"]);
+    if (!initTimezoneBean || !initTimezoneBean.value) {
         log.debug("server", "emit initServerTimezone");
         socket.emit("initServerTimezone");
     }
@@ -1731,7 +1739,7 @@ async function initDatabase(testMode = false) {
     // Patch the database
     await Database.patch(port, hostname);
 
-    let jwtSecretBean = await R.findOne("setting", " `key` = ? ", [
+    let jwtSecretBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, [
         "jwtSecret",
     ]);
 

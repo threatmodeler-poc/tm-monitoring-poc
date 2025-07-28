@@ -23,6 +23,7 @@ const { DockerHost } = require("../docker");
 const Gamedig = require("gamedig");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const Database = require("../database");
 const { UptimeCalculator } = require("../uptime-calculator");
 const { CookieJar } = require("tough-cookie");
 const { HttpsCookieAgent } = require("http-cookie-agent/http");
@@ -1720,7 +1721,7 @@ class Monitor extends BeanModel {
      * @returns {Promise<void>}
      */
     static async unlinkAllChildren(groupID) {
-        return await R.exec("UPDATE `monitor` SET parent = ? WHERE parent = ? ", [
+        return await R.exec(`UPDATE ${Database.escapeIdentifier('monitor')} SET parent = ? WHERE parent = ? `, [
             null, groupID
         ]);
     }

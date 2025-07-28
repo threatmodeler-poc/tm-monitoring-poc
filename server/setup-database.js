@@ -149,7 +149,7 @@ class SetupDatabase {
 
                 let dbConfig = request.body.dbConfig;
 
-                let supportedDBTypes = [ "mariadb", "sqlite" ];
+                let supportedDBTypes = [ "mariadb", "sqlite", "mssql" ];
 
                 if (this.isEnabledEmbeddedMariaDB()) {
                     supportedDBTypes.push("embedded-mariadb");
@@ -216,6 +216,65 @@ class SetupDatabase {
                         });
                         await connection.execute("SELECT 1");
                         connection.end();
+                    } catch (e) {
+                        response.status(400).json("Cannot connect to the database: " + e.message);
+                        this.runningSetup = false;
+                        return;
+                    }
+                }
+
+                // External MSSQL
+                if (dbConfig.type === "mssql") {
+                    if (!dbConfig.hostname) {
+                        response.status(400).json("Hostname is required");
+                        this.runningSetup = false;
+                        return;
+                    }
+
+                    if (!dbConfig.port) {
+                        response.status(400).json("Port is required");
+                        this.runningSetup = false;
+                        return;
+                    }
+
+                    if (!dbConfig.dbName) {
+                        response.status(400).json("Database name is required");
+                        this.runningSetup = false;
+                        return;
+                    }
+
+                    if (!dbConfig.username) {
+                        response.status(400).json("Username is required");
+                        this.runningSetup = false;
+                        return;
+                    }
+
+                    if (!dbConfig.password) {
+                        response.status(400).json("Password is required");
+                        this.runningSetup = false;
+                        return;
+                    }
+
+                    // Test connection
+                    try {
+                        const sql = require("mssql");
+                        const pool = new sql.ConnectionPool({
+                            server: dbConfig.hostname,
+                            port: dbConfig.port,
+                            user: dbConfig.username,
+                            password: dbConfig.password,
+                            database: dbConfig.dbName,
+                            options: {
+                                encrypt: false,
+                                trustServerCertificate: true,
+                                enableArithAbort: true,
+                            },
+                            requestTimeout: 10000,
+                            connectionTimeout: 10000,
+                        });
+                        await pool.connect();
+                        await pool.request().query("SELECT 1");
+                        await pool.close();
                     } catch (e) {
                         response.status(400).json("Cannot connect to the database: " + e.message);
                         this.runningSetup = false;

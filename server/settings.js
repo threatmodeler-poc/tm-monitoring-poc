@@ -1,5 +1,6 @@
 const { R } = require("redbean-node");
 const { log } = require("../src/util");
+const Database = require("./database");
 
 class Settings {
 
@@ -51,7 +52,7 @@ class Settings {
             return v;
         }
 
-        let value = await R.getCell("SELECT `value` FROM setting WHERE `key` = ? ", [
+        let value = await R.getCell(`SELECT ${Database.escapeIdentifier('value')} FROM setting WHERE ${Database.escapeIdentifier('key')} = ? `, [
             key,
         ]);
 
@@ -79,7 +80,7 @@ class Settings {
      */
     static async set(key, value, type = null) {
 
-        let bean = await R.findOne("setting", " `key` = ? ", [
+        let bean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, [
             key,
         ]);
         if (!bean) {
@@ -99,7 +100,7 @@ class Settings {
      * @returns {Promise<Bean>} Settings
      */
     static async getSettings(type) {
-        let list = await R.getAll("SELECT `key`, `value` FROM setting WHERE `type` = ? ", [
+        let list = await R.getAll(`SELECT ${Database.escapeIdentifier('key')}, ${Database.escapeIdentifier('value')} FROM setting WHERE ${Database.escapeIdentifier('type')} = ? `, [
             type,
         ]);
 
@@ -128,7 +129,7 @@ class Settings {
         let promiseList = [];
 
         for (let key of keyList) {
-            let bean = await R.findOne("setting", " `key` = ? ", [
+            let bean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, [
                 key
             ]);
 

@@ -6,6 +6,7 @@ const { log } = require("../src/util");
 const { loginRateLimiter, apiRateLimiter } = require("./rate-limiter");
 const { Settings } = require("./settings");
 const dayjs = require("dayjs");
+const Database = require("./database");
 
 /**
  * Login to web app
@@ -25,7 +26,7 @@ exports.login = async function (username, password) {
     if (user && passwordHash.verify(password, user.password)) {
         // Upgrade the hash to bcrypt
         if (passwordHash.needRehash(user.password)) {
-            await R.exec("UPDATE `user` SET password = ? WHERE id = ? ", [
+            await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET password = ? WHERE id = ? `, [
                 await passwordHash.generate(password),
                 user.id,
             ]);

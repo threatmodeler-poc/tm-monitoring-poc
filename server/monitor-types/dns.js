@@ -7,6 +7,7 @@ const { ConditionVariable } = require("../monitor-conditions/variables");
 const { defaultStringOperators } = require("../monitor-conditions/operators");
 const { ConditionExpressionGroup } = require("../monitor-conditions/expression");
 const { evaluateExpressionGroup } = require("../monitor-conditions/evaluator");
+const Database = require("../database");
 
 class DnsMonitorType extends MonitorType {
     name = "dns";
@@ -76,7 +77,7 @@ class DnsMonitorType extends MonitorType {
         }
 
         if (monitor.dns_last_result !== dnsMessage && dnsMessage !== undefined) {
-            await R.exec("UPDATE `monitor` SET dns_last_result = ? WHERE id = ? ", [ dnsMessage, monitor.id ]);
+            await R.exec(`UPDATE ${Database.escapeIdentifier('monitor')} SET dns_last_result = ? WHERE id = ? `, [ dnsMessage, monitor.id ]);
         }
 
         heartbeat.msg = dnsMessage;

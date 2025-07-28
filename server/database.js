@@ -310,6 +310,33 @@ class Database {
                 },
                 pool: mariadbPoolConfig,
             };
+        } else if (dbConfig.type === "mssql") {
+            if (!/^[\w\-]+$/.test(dbConfig.dbName)) {
+                throw Error("Invalid database name. A database name can only consist of letters, numbers, underscores and hyphens");
+            }
+
+            config = {
+                client: "mssql",
+                connection: {
+                    server: dbConfig.hostname,
+                    port: dbConfig.port,
+                    user: dbConfig.username,
+                    password: dbConfig.password,
+                    database: dbConfig.dbName,
+                    options: {
+                        encrypt: false, // Use true if you're connecting to Azure SQL
+                        trustServerCertificate: true, // Set to false in production with valid certificates
+                        enableArithAbort: true,
+                        requestTimeout: 120000,
+                        connectionTimeout: 120000,
+                    },
+                    pool: {
+                        min: 0,
+                        max: 10,
+                        idleTimeoutMillis: 30000,
+                    }
+                },
+            };
         } else {
             throw new Error("Unknown Database type: " + dbConfig.type);
         }
@@ -342,6 +369,8 @@ class Database {
             await this.initSQLite(testMode, noLog);
         } else if (dbConfig.type.endsWith("mariadb")) {
             await this.initMariaDB();
+        } else if (dbConfig.type === "mssql") {
+            await this.initMSSQL();
         }
     }
 
@@ -388,6 +417,22 @@ class Database {
             await createTables();
         } else {
             log.debug("db", "MariaDB database already exists");
+        }
+    }
+
+    /**
+     * Initialize MSSQL
+     * @returns {Promise<void>}
+     */
+    static async initMSSQL() {
+        log.debug("db", "Checking if MSSQL database exists...");
+
+        let hasTable = await R.hasTable("docker_host");
+        if (!hasTable) {
+            const { createTablesMssql } = require("../db/knex_init_db");
+            await createTablesMssql();
+        } else {
+            log.debug("db", "MSSQL database already exists");
         }
     }
 
@@ -583,7 +628,7 @@ class Database {
                 id
             ]);
 
-            await R.exec("UPDATE [group] SET status_page_id = ? WHERE status_page_id IS NULL", [
+            await R.exec(`UPDATE ${Database.escapeIdentifier('group')} SET status_page_id = ? WHERE status_page_id IS NULL`, [
                 id
             ]);
 
@@ -736,8 +781,23 @@ class Database {
     static sqlHourOffset() {
         if (Database.dbConfig.type === "sqlite") {
             return "DATETIME('now', ? || ' hours')";
+        } else if (Database.dbConfig.type === "mssql") {
+            return "DATEADD(HOUR, ?, GETUTCDATE())";
         } else {
             return "DATE_ADD(UTC_TIMESTAMP(), INTERVAL ? HOUR)";
+        }
+    }
+
+    /**
+     * Escape identifier based on database type
+     * @param {string} identifier The identifier to escape
+     * @returns {string} The escaped identifier
+     */
+    static escapeIdentifier(identifier) {
+        if (Database.dbConfig.type === "mssql") {
+            return `[${identifier}]`;
+        } else {
+            return `\`${identifier}\``;
         }
     }
 
@@ -758,10 +818,19 @@ class Database {
         // Add a setting for 2.0.0-dev users to skip this migration
         if (process.env.SET_MIGRATE_AGGREGATE_TABLE_TO_TRUE === "1") {
             log.warn("db", "SET_MIGRATE_AGGREGATE_TABLE_TO_TRUE is set to 1, skipping aggregate table migration forever (for 2.0.0-dev users)");
-            await Settings.set("migrateAggregateTableState", "migrated");
+            // Use direct database query instead of Settings.set to avoid circular dependency
+            let bean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
+            if (!bean) {
+                bean = R.dispense("setting");
+                bean.key = "migrateAggregateTableState";
+            }
+            bean.value = "migrated";
+            await R.store(bean);
         }
 
-        let migrateState = await Settings.get("migrateAggregateTableState");
+        // Use direct database query instead of Settings.get to avoid circular dependency
+        let migrateStateBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
+        let migrateState = migrateStateBean ? migrateStateBean.value : null;
 
         // Skip if already migrated
         // If it is migrating, it possibly means the migration was interrupted, or the migration is in progress
@@ -807,7 +876,14 @@ class Database {
             }
         }
 
-        await Settings.set("migrateAggregateTableState", "migrating");
+        // Use direct database query instead of Settings.set to avoid circular dependency
+        let migratingBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
+        if (!migratingBean) {
+            migratingBean = R.dispense("setting");
+            migratingBean.key = "migrateAggregateTableState";
+        }
+        migratingBean.value = "migrating";
+        await R.store(migratingBean);
 
         let progressPercent = 0;
         let part = 100 / monitors.length;
@@ -864,7 +940,16 @@ class Database {
         migrationServer?.update(msg);
 
         await Database.clearHeartbeatData(true);
-        await Settings.set("migrateAggregateTableState", "migrated");
+        
+        // Use direct database query instead of Settings.set to avoid circular dependency
+        let migratedBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
+        if (!migratedBean) {
+            migratedBean = R.dispense("setting");
+            migratedBean.key = "migrateAggregateTableState";
+        }
+        migratedBean.value = "migrated";
+        await R.store(migratedBean);
+        
         await migrationServer?.stop();
 
         if (monitors.length > 0) {

@@ -6,6 +6,7 @@ const { debug } = require("../src/util");
 const { UptimeKumaServer } = require("./uptime-kuma-server");
 const { CookieJar } = require("tough-cookie");
 const { createCookieAgent } = require("http-cookie-agent/http");
+const Database = require("./database");
 
 class Proxy {
 
@@ -42,7 +43,7 @@ class Proxy {
 
         // When proxy is default update deactivate old default proxy
         if (proxy.default) {
-            await R.exec("UPDATE proxy SET `default` = 0 WHERE `default` = 1");
+            await R.exec(`UPDATE proxy SET ${Database.escapeIdentifier('default')} = 0 WHERE ${Database.escapeIdentifier('default')} = 1`);
         }
 
         bean.user_id = userID;
