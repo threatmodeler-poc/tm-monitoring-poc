@@ -1,5 +1,6 @@
 {
     "languageName": "English",
+    "ThreatModeler Monitor": "ThreatModeler Monitor",
     "setupDatabaseChooseDatabase": "Which database would you like to use?",
     "setupDatabaseEmbeddedMariaDB": "You don't need to set anything. This docker image has embedded and configured MariaDB for you automatically. Uptime Kuma will connect to this database via unix socket.",
     "setupDatabaseMariaDB": "Connect to an external MariaDB database. You need to set the database connection information.",
