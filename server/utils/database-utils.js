@@ -11,8 +11,6 @@ function getLimitClause(limit, offset = 0) {
     // Import Database here to avoid circular dependency
     const Database = require("../database");
     
-    console.log(">>> getLimitClause called: Database.dbConfig.type =", Database.dbConfig?.type);
-    
     if (Database.dbConfig?.type === "mssql") {
         return `OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY`;
     } else {
