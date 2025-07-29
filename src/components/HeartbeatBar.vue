@@ -17,9 +17,9 @@
             >
                 <div
                     class="beat"
-                    :class="{ 'empty': (beat === 0 || beat === null || beat.status === null), 'down': (beat.status === DOWN || beat.status === 0), 'pending': (beat.status === PENDING || beat.status === 2), 'maintenance': (beat.status === MAINTENANCE || beat.status === 3) }"
+                    :class="{ 'empty': (beat === 0 || beat === null || beat.status === null), 'down': (beat.status === DOWN), 'pending': (beat.status === PENDING), 'maintenance': (beat.status === MAINTENANCE) }"
                     :style="beatStyle"
-                />
+                ></div>
             </div>
         </div>
         <div
@@ -88,6 +88,10 @@ export default {
             tooltipY: 0,
             tooltipPosition: "below",
             tooltipTimeoutId: null,
+            DOWN,
+            UP,
+            PENDING,
+            MAINTENANCE,
         };
     },
     computed: {
@@ -138,7 +142,7 @@ export default {
 
             return -1 * num;
         },
-
+        
         shortBeatList() {
             if (!this.beatList) {
                 return [];
