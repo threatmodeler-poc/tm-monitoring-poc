@@ -17,7 +17,7 @@
             >
                 <div
                     class="beat"
-                    :class="{ 'empty': (beat === 0 || beat === null || beat.status === null), 'down': (beat.status === DOWN), 'pending': (beat.status === PENDING), 'maintenance': (beat.status === MAINTENANCE) }"
+                    :class="{ 'empty': (beat === 0 || beat === null || beat.status === null), 'down': (beat.status === DOWN || beat.status === 0), 'pending': (beat.status === PENDING || beat.status === 2), 'maintenance': (beat.status === MAINTENANCE || beat.status === 3) }"
                     :style="beatStyle"
                 />
             </div>

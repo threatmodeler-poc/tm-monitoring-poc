@@ -416,6 +416,24 @@ export function polyfill() {
     }
 }
 
+// uncomment this if the above function is not working properly
+// export function polyfill() {
+//     if (!String.prototype.replaceAll) {
+//         String.prototype.replaceAll = function (
+//             searchValue: string | RegExp,
+//             replaceValue: string | ((substring: string, ...args: any[]) => string)
+//         ): string {
+//             if (searchValue instanceof RegExp) {
+//                 if (!searchValue.global) {
+//                     throw new TypeError("replaceAll must be called with a global RegExp");
+//                 }
+//                 return this.replace(searchValue, replaceValue as any);
+//             }
+//             return this.replace(new RegExp(searchValue as string, "g"), replaceValue as any);
+//         };
+//     }
+// }
+
 export class TimeLogger {
     startTime: number;
 
