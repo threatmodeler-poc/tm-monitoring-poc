@@ -99,7 +99,7 @@ Notification.init();
 
 log.debug("server", "Importing Database");
 const Database = require("./database");
-const { queryWithLimit } = require("./utils/database-utils");
+const { queryWithLimit, storeWithId } = require("./utils/database-utils");
 
 log.debug("server", "Importing Background Jobs");
 const { initBackgroundJobs, stopBackgroundJobs } = require("./jobs");
@@ -736,7 +736,12 @@ let needSetup = false;
 
                 bean.validate();
 
-                await R.store(bean);
+                // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
+                const fallbackCriteria = {
+                    user_id: socket.userID,
+                    name: monitor.name
+                };
+                bean = await storeWithId(bean, "monitor", fallbackCriteria);
 
                 await updateMonitorNotification(bean.id, notificationIDList);
 
@@ -897,7 +902,12 @@ let needSetup = false;
 
                 bean.validate();
 
-                await R.store(bean);
+                // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
+                const fallbackCriteria = {
+                    user_id: socket.userID,
+                    id: monitor.id
+                };
+                bean = await storeWithId(bean, "monitor", fallbackCriteria);
 
                 if (removeGroupChildren) {
                     await Monitor.unlinkAllChildren(monitor.id);
@@ -1135,7 +1145,13 @@ let needSetup = false;
                 let bean = R.dispense("tag");
                 bean.name = tag.name;
                 bean.color = tag.color;
-                await R.store(bean);
+                
+                // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
+                const fallbackCriteria = {
+                    name: tag.name,
+                    color: tag.color
+                };
+                bean = await storeWithId(bean, "tag", fallbackCriteria);
 
                 callback({
                     ok: true,
@@ -1165,7 +1181,12 @@ let needSetup = false;
                 }
                 bean.name = tag.name;
                 bean.color = tag.color;
-                await R.store(bean);
+                
+                // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
+                const fallbackCriteria = {
+                    id: tag.id
+                };
+                bean = await storeWithId(bean, "tag", fallbackCriteria);
 
                 callback({
                     ok: true,
@@ -1676,7 +1697,13 @@ async function updateMonitorNotification(monitorID, notificationIDList) {
             let relation = R.dispense("monitor_notification");
             relation.monitor_id = monitorID;
             relation.notification_id = notificationID;
-            await R.store(relation);
+            
+            // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
+            const fallbackCriteria = {
+                monitor_id: monitorID,
+                notification_id: notificationID
+            };
+            await storeWithId(relation, "monitor_notification", fallbackCriteria);
         }
     }
 }

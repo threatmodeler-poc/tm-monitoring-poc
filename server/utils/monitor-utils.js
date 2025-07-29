@@ -1,4 +1,5 @@
 const { R } = require("redbean-node");
+const { storeWithId } = require("./database-utils");
 
 /**
  * Update notifications for a given monitor
@@ -16,7 +17,13 @@ async function updateMonitorNotification(monitorID, notificationIDList) {
             let relation = R.dispense("monitor_notification");
             relation.monitor_id = monitorID;
             relation.notification_id = notificationID;
-            await R.store(relation);
+            
+            // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
+            const fallbackCriteria = {
+                monitor_id: monitorID,
+                notification_id: notificationID
+            };
+            await storeWithId(relation, "monitor_notification", fallbackCriteria);
         }
     }
 }

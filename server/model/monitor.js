@@ -559,7 +559,6 @@ class Monitor extends BeanModel {
                         });
                     });
 
-                    log.debug("monitor", `[${this.name}] Axios Options: ${JSON.stringify(options)}`);
                     log.debug("monitor", `[${this.name}] Axios Request`);
 
                     // Make Request
