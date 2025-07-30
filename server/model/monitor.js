@@ -1177,7 +1177,7 @@ class Monitor extends BeanModel {
                 if (isValidObjects) {
                     if (oldCertInfo.certInfo.fingerprint256 !== checkCertificateResult.certInfo.fingerprint256) {
                         log.debug("monitor", "Resetting sent_history");
-                        await R.exec("DELETE FROM notification_sent_history WHERE type = 'certificate' AND monitor_id = ?", [
+                        await R.exec(`DELETE FROM ${Database.escapeIdentifier('notification_sent_history')} WHERE ${Database.escapeIdentifier('type')} = 'certificate' AND ${Database.escapeIdentifier('monitor_id')} = ?`, [
                             this.id
                         ]);
                     } else {
@@ -1438,7 +1438,7 @@ class Monitor extends BeanModel {
      */
     async sendCertNotificationByTargetDays(certCN, certType, daysRemaining, targetDays, notificationList) {
 
-        let row = await R.getRow("SELECT * FROM notification_sent_history WHERE type = ? AND monitor_id = ? AND days <= ?", [
+        let row = await R.getRow(`SELECT * FROM ${Database.escapeIdentifier('notification_sent_history')} WHERE ${Database.escapeIdentifier('type')} = ? AND ${Database.escapeIdentifier('monitor_id')} = ? AND ${Database.escapeIdentifier('days')} <= ?`, [
             "certificate",
             this.id,
             targetDays,
@@ -1465,7 +1465,7 @@ class Monitor extends BeanModel {
         }
 
         if (sent) {
-            await R.exec("INSERT INTO notification_sent_history (type, monitor_id, days) VALUES(?, ?, ?)", [
+            await R.exec(`INSERT INTO ${Database.escapeIdentifier('notification_sent_history')} (${Database.escapeIdentifier('type')}, ${Database.escapeIdentifier('monitor_id')}, ${Database.escapeIdentifier('days')}) VALUES(?, ?, ?)`, [
                 "certificate",
                 this.id,
                 targetDays,

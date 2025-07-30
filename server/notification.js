@@ -1,5 +1,6 @@
 const { R } = require("redbean-node");
 const { log } = require("../src/util");
+const Database = require("./database");
 const Alerta = require("./notification-providers/alerta");
 const AlertNow = require("./notification-providers/alertnow");
 const AliyunSms = require("./notification-providers/aliyun-sms");
@@ -245,7 +246,7 @@ class Notification {
      * @returns {Promise<void>}
      */
     static async delete(notificationID, userID) {
-        let bean = await R.findOne("notification", " id = ? AND user_id = ? ", [
+        let bean = await R.findOne("notification", ` ${Database.escapeIdentifier('id')} = ? AND ${Database.escapeIdentifier('user_id')} = ? `, [
             notificationID,
             userID,
         ]);
@@ -254,6 +255,12 @@ class Notification {
             throw new Error("notification not found");
         }
 
+        // First delete all monitor_notification relationships that reference this notification
+        await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_notification')} WHERE ${Database.escapeIdentifier('notification_id')} = ?`, [
+            notificationID
+        ]);
+
+        // Then delete the notification itself
         await R.trash(bean);
     }
 

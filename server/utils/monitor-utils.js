@@ -1,5 +1,6 @@
 const { R } = require("redbean-node");
 const { storeWithId } = require("./database-utils");
+const Database = require("../database");
 
 /**
  * Update notifications for a given monitor
@@ -8,7 +9,7 @@ const { storeWithId } = require("./database-utils");
  * @returns {Promise<void>}
  */
 async function updateMonitorNotification(monitorID, notificationIDList) {
-    await R.exec("DELETE FROM monitor_notification WHERE monitor_id = ? ", [
+    await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_notification')} WHERE ${Database.escapeIdentifier('monitor_id')} = ? `, [
         monitorID,
     ]);
 

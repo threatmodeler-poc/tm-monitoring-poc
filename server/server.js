@@ -1089,10 +1089,10 @@ let needSetup = false;
                 await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_tls_info')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
                 
                 // Delete notification history
-                await R.exec("DELETE FROM notification_sent_history WHERE monitor_id = ?", [monitorID]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier('notification_sent_history')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
                 
                 // Finally delete the monitor itself
-                await R.exec("DELETE FROM monitor WHERE id = ? AND user_id = ? ", [
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor')} WHERE ${Database.escapeIdentifier('id')} = ? AND ${Database.escapeIdentifier('user_id')} = ? `, [
                     monitorID,
                     socket.userID,
                 ]);
@@ -1688,7 +1688,7 @@ let needSetup = false;
  * @returns {Promise<void>}
  */
 async function updateMonitorNotification(monitorID, notificationIDList) {
-    await R.exec("DELETE FROM monitor_notification WHERE monitor_id = ? ", [
+    await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_notification')} WHERE ${Database.escapeIdentifier('monitor_id')} = ? `, [
         monitorID,
     ]);
 
