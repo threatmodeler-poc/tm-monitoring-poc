@@ -5,6 +5,7 @@ const dayjs = require("dayjs");
 const Cron = require("croner");
 const { UptimeKumaServer } = require("../uptime-kuma-server");
 const apicache = require("../modules/apicache");
+const Database = require("../database");
 
 class Maintenance extends BeanModel {
 
@@ -163,7 +164,7 @@ class Maintenance extends BeanModel {
                 throw new Error("Invalid start date");
             }
 
-            bean.start_date = obj.dateRange[0];
+            bean.start_date = Database.formatDateTime(obj.dateRange[0]);
         } else {
             bean.start_date = null;
         }
@@ -174,7 +175,7 @@ class Maintenance extends BeanModel {
                 throw new Error("Invalid end date");
             }
 
-            bean.end_date = obj.dateRange[1];
+            bean.end_date = Database.formatDateTime(obj.dateRange[1]);
         } else {
             bean.end_date = null;
         }
@@ -262,7 +263,7 @@ class Maintenance extends BeanModel {
                     }, duration);
 
                     // Set last start date to current time
-                    this.last_start_date = current.toISOString();
+                    this.last_start_date = Database.formatDateTime(current.toISOString());
                     R.store(this);
                 };
 

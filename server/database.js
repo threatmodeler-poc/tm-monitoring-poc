@@ -802,6 +802,46 @@ class Database {
     }
 
     /**
+     * Format datetime value based on database type
+     * @param {string|Date} datetime The datetime value to format
+     * @returns {string|null} The formatted datetime string or null if invalid
+     */
+    static formatDateTime(datetime) {
+        if (!datetime) {
+            return null;
+        }
+        
+        const dayjs = require("dayjs");
+        let dayjsObj;
+        
+        try {
+            if (typeof datetime === "string") {
+                dayjsObj = dayjs(datetime);
+            } else if (datetime instanceof Date) {
+                dayjsObj = dayjs(datetime);
+            } else {
+                dayjsObj = dayjs();
+            }
+            
+            if (!dayjsObj.isValid()) {
+                console.warn("Database.formatDateTime: Invalid datetime value:", datetime);
+                return datetime; // Return original value if invalid
+            }
+            
+            if (Database.dbConfig && Database.dbConfig.type === "mssql") {
+                // MSSQL requires YYYY-MM-DD HH:mm:ss format
+                return dayjsObj.format("YYYY-MM-DD HH:mm:ss");
+            } else {
+                // For other databases (MySQL, SQLite), ISO string is fine
+                return dayjsObj.toISOString();
+            }
+        } catch (error) {
+            console.warn("Database.formatDateTime: Error formatting datetime:", error.message);
+            return datetime; // Return original value on error
+        }
+    }
+
+    /**
      * Migrate the old data in the heartbeat table to the new format (stat_daily, stat_hourly, stat_minutely)
      * It should be run once while upgrading V1 to V2
      *

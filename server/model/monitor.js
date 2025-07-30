@@ -1491,8 +1491,8 @@ class Monitor extends BeanModel {
      */
     static async isUnderMaintenance(monitorID) {
         const maintenanceIDList = await R.getCol(`
-            SELECT maintenance_id FROM monitor_maintenance
-            WHERE monitor_id = ?
+            SELECT ${Database.escapeIdentifier('maintenance_id')} FROM ${Database.escapeIdentifier('monitor_maintenance')}
+            WHERE ${Database.escapeIdentifier('monitor_id')} = ?
         `, [ monitorID ]);
 
         for (const maintenanceID of maintenanceIDList) {

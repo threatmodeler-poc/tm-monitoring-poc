@@ -4,6 +4,7 @@ const { R } = require("redbean-node");
 const apicache = require("../modules/apicache");
 const { UptimeKumaServer } = require("../uptime-kuma-server");
 const Maintenance = require("../model/maintenance");
+const Database = require("../database");
 const server = UptimeKumaServer.getInstance();
 
 /**
@@ -22,6 +23,19 @@ module.exports.maintenanceSocketHandler = (socket) => {
             let bean = await Maintenance.jsonToBean(R.dispense("maintenance"), maintenance);
             bean.user_id = socket.userID;
             let maintenanceID = await R.store(bean);
+
+            // For MSSQL, RedBeanPHP may not properly return the identity value
+            // If ID is still null/undefined, fetch it from the database
+            if ((maintenanceID === null || maintenanceID === undefined) && Database.dbConfig?.type === "mssql") {
+                const lastInserted = await R.findOne("maintenance", 
+                    `${Database.escapeIdentifier('user_id')} = ? ORDER BY ${Database.escapeIdentifier('id')} DESC`, 
+                    [socket.userID]
+                );
+                if (lastInserted) {
+                    maintenanceID = lastInserted.id;
+                    bean.id = lastInserted.id;
+                }
+            }
 
             server.maintenanceList[maintenanceID] = bean;
             await bean.run(true);
@@ -80,7 +94,7 @@ module.exports.maintenanceSocketHandler = (socket) => {
         try {
             checkLogin(socket);
 
-            await R.exec("DELETE FROM monitor_maintenance WHERE maintenance_id = ?", [
+            await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_maintenance')} WHERE ${Database.escapeIdentifier('maintenance_id')} = ?`, [
                 maintenanceID
             ]);
 
@@ -115,7 +129,7 @@ module.exports.maintenanceSocketHandler = (socket) => {
         try {
             checkLogin(socket);
 
-            await R.exec("DELETE FROM maintenance_status_page WHERE maintenance_id = ?", [
+            await R.exec(`DELETE FROM ${Database.escapeIdentifier('maintenance_status_page')} WHERE ${Database.escapeIdentifier('maintenance_id')} = ?`, [
                 maintenanceID
             ]);
 
@@ -244,7 +258,7 @@ module.exports.maintenanceSocketHandler = (socket) => {
                 delete server.maintenanceList[maintenanceID];
             }
 
-            await R.exec("DELETE FROM maintenance WHERE id = ? AND user_id = ? ", [
+            await R.exec(`DELETE FROM ${Database.escapeIdentifier('maintenance')} WHERE ${Database.escapeIdentifier('id')} = ? AND ${Database.escapeIdentifier('user_id')} = ? `, [
                 maintenanceID,
                 socket.userID,
             ]);

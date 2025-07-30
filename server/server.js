@@ -1079,14 +1079,14 @@ let needSetup = false;
                 await R.exec("DELETE FROM stat_daily WHERE monitor_id = ?", [monitorID]);
                 
                 // Delete heartbeats
-                await R.exec("DELETE FROM heartbeat WHERE monitor_id = ?", [monitorID]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier('heartbeat')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
                 
                 // Delete monitor associations
-                await R.exec("DELETE FROM monitor_group WHERE monitor_id = ?", [monitorID]);
-                await R.exec("DELETE FROM monitor_maintenance WHERE monitor_id = ?", [monitorID]);
-                await R.exec("DELETE FROM monitor_notification WHERE monitor_id = ?", [monitorID]);
-                await R.exec("DELETE FROM monitor_tag WHERE monitor_id = ?", [monitorID]);
-                await R.exec("DELETE FROM monitor_tls_info WHERE monitor_id = ?", [monitorID]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_group')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_maintenance')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_notification')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_tag')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_tls_info')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
                 
                 // Delete notification history
                 await R.exec("DELETE FROM notification_sent_history WHERE monitor_id = ?", [monitorID]);
