@@ -219,6 +219,7 @@ class Maintenance extends BeanModel {
         }
 
         log.debug("maintenance", "Run maintenance id: " + this.id);
+        log.debug("maintenance", `Maintenance ${this.id} data: strategy=${this.strategy}, startDate=${this.startDate}, startTime=${this.startTime}, start_date=${this.start_date}, start_time=${this.start_time}`);
 
         // 1.21.2 migration
         if (!this.cron) {
@@ -271,8 +272,42 @@ class Maintenance extends BeanModel {
                 if (this.strategy === "recurring-interval") {
                     // For recurring-interval, Croner needs to have interval and startAt
                     const startDate = dayjs(this.startDate);
-                    const [ hour, minute ] = this.startTime.split(":");
-                    const startDateTime = startDate.hour(hour).minute(minute);
+                    
+                    // Validate startDate
+                    if (!startDate.isValid()) {
+                        log.error("maintenance", `Invalid startDate for maintenance ${this.id}: ${this.startDate}`);
+                        throw new Error(`Invalid startDate: ${this.startDate}`);
+                    }
+                    
+                    // Extract time from start_time (handle MSSQL datetime format)
+                    let timeString;
+                    if (this.start_time && typeof this.start_time === 'string') {
+                        // If it's a full datetime like "1970-01-02 02:53:00", extract just the time part
+                        if (this.start_time.includes(' ')) {
+                            timeString = this.start_time.split(' ')[1];
+                        } else {
+                            timeString = this.start_time;
+                        }
+                    } else {
+                        log.error("maintenance", `Invalid start_time for maintenance ${this.id}: ${this.start_time}`);
+                        throw new Error(`Invalid start_time: ${this.start_time}`);
+                    }
+                    
+                    // Validate timeString format
+                    if (!timeString || !timeString.includes(":")) {
+                        log.error("maintenance", `Invalid timeString for maintenance ${this.id}: ${timeString}`);
+                        throw new Error(`Invalid timeString: ${timeString}`);
+                    }
+                    
+                    const [ hour, minute ] = timeString.split(":");
+                    const startDateTime = startDate.hour(parseInt(hour)).minute(parseInt(minute));
+                    
+                    // Validate final startDateTime
+                    if (!startDateTime.isValid()) {
+                        log.error("maintenance", `Invalid startDateTime for maintenance ${this.id}: startDate=${this.startDate}, timeString=${timeString}`);
+                        throw new Error(`Invalid startDateTime: startDate=${this.startDate}, timeString=${timeString}`);
+                    }
+                    
                     this.beanMeta.job = new Cron(this.cron, {
                         timezone: await this.getTimezone(),
                         startAt: startDateTime.toISOString(),

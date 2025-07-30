@@ -76,7 +76,7 @@ export default {
         customBodyPlaceholder() {
             return this.$t("Example:", [
 `{
-    "Title": "Uptime Kuma Alert{% if monitorJSON %} - {{ monitorJSON['name'] }}{% endif %}",
+    "Title": "ThreatModeler Monitor Alert{% if monitorJSON %} - {{ monitorJSON['name'] }}{% endif %}",
     "Body": "{{ msg }}"
 }`
             ]);

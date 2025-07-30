@@ -145,7 +145,6 @@ const { dockerSocketHandler } = require("./socket-handlers/docker-socket-handler
 const { maintenanceSocketHandler } = require("./socket-handlers/maintenance-socket-handler");
 const { apiKeySocketHandler } = require("./socket-handlers/api-key-socket-handler");
 const { generalSocketHandler } = require("./socket-handlers/general-socket-handler");
-const { Settings } = require("./settings");
 const apicache = require("./modules/apicache");
 const { resetChrome } = require("./monitor-types/real-browser-monitor-type");
 const { EmbeddedMariaDB } = require("./embedded-mariadb");
@@ -190,7 +189,7 @@ let needSetup = false;
 
     // Database should be ready now
     await server.initAfterDatabaseReady();
-    server.entryPage = await Settings.get("entryPage");
+    server.entryPage = await setting("entryPage");
     await StatusPage.loadDomainMappingList();
 
     log.debug("server", "Adding route");
@@ -1428,8 +1427,8 @@ let needSetup = false;
                     server.disconnectAllSocketClients(socket.userID, socket.id);
                 }
 
-                const previousChromeExecutable = await Settings.get("chromeExecutable");
-                const previousNSCDStatus = await Settings.get("nscd");
+                const previousChromeExecutable = await setting("chromeExecutable");
+                const previousNSCDStatus = await setting("nscd");
 
                 await setSettings("general", data);
                 server.entryPage = data.entryPage;
@@ -1915,6 +1914,9 @@ async function shutdownFunction(signal) {
 
     stopBackgroundJobs();
     await cloudflaredStop();
+    
+    // Stop cache cleaner
+    const { Settings } = require("./settings");
     Settings.stopCacheCleaner();
 }
 

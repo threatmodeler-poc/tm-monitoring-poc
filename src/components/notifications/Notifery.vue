@@ -18,7 +18,7 @@
             v-model="$parent.notification.notiferyTitle"
             type="text"
             class="form-control"
-            placeholder="Uptime Kuma Alert"
+            placeholder="ThreatModeler Monitor Alert"
         />
     </div>
 
