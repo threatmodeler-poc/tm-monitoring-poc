@@ -7,6 +7,7 @@ const Database = require("../database");
 const apicache = require("../modules/apicache");
 const StatusPage = require("../model/status_page");
 const { UptimeKumaServer } = require("../uptime-kuma-server");
+const { storeWithId } = require("../utils/database-utils");
 
 /**
  * Socket handlers for status page
@@ -193,7 +194,11 @@ module.exports.statusPageSocketHandler = (socket) => {
                 groupBean.public = true;
                 groupBean.weight = groupOrder++;
 
-                await R.store(groupBean);
+                groupBean = await storeWithId(groupBean, "group", {
+                    status_page_id: groupBean.status_page_id,
+                    name: groupBean.name,
+                    public: groupBean.public
+                });
 
                 await R.exec("DELETE FROM monitor_group WHERE group_id = ? ", [
                     groupBean.id
@@ -335,6 +340,10 @@ module.exports.statusPageSocketHandler = (socket) => {
 
                 // Delete group
                 await R.exec(`DELETE FROM ${Database.escapeIdentifier('group')} WHERE status_page_id = ? `, [
+                    statusPageID
+                ]);
+
+                await R.exec(`DELETE FROM maintenance_status_page WHERE status_page_id = ? `, [
                     statusPageID
                 ]);
 

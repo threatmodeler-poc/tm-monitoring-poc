@@ -111,6 +111,12 @@ router.all("/api/push/:pushToken", async (request, response) => {
                     // Reset down count
                     bean.downCount = 0;
                 }
+
+                // create incident here if necessary
+                if (bean.status === DOWN) {
+                    // await this.createIncident(bean);
+                }
+
             }
         }
 

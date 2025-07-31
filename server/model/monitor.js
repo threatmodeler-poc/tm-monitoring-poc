@@ -981,6 +981,11 @@ class Monitor extends BeanModel {
             let endTimeDayjs = await uptimeCalculator.update(bean.status, parseFloat(bean.ping));
             bean.end_time = R.isoDateTimeMillis(endTimeDayjs);
 
+            // create incident here if necessary
+            if (bean.status === DOWN) {
+                // await this.createIncident(bean);
+            }
+
             // Store to database first to get the auto-incremented ID
             await R.store(bean);
             

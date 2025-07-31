@@ -1090,6 +1090,8 @@ let needSetup = false;
                 // Delete notification history
                 await R.exec(`DELETE FROM ${Database.escapeIdentifier('notification_sent_history')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
                 
+                await R.exec(`UPDATE ${Database.escapeIdentifier('monitor')} SET ${Database.escapeIdentifier('parent')} = NULL WHERE ${Database.escapeIdentifier('parent')} = ?`, [monitorID]);
+
                 // Finally delete the monitor itself
                 await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor')} WHERE ${Database.escapeIdentifier('id')} = ? AND ${Database.escapeIdentifier('user_id')} = ? `, [
                     monitorID,
