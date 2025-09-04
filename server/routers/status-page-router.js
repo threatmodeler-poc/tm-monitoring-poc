@@ -78,10 +78,10 @@ router.get("/api/status-page/heartbeat/:slug", cache("1 minutes"), async (reques
         let statusPageID = await StatusPage.slugToID(slug);
 
         let monitorIDList = await R.getCol(`
-            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
-            WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier("group")}
+            WHERE monitor_group.group_id = ${Database.escapeIdentifier("group")}.id
             AND [public] = 1
-            AND ${Database.escapeIdentifier('group')}.status_page_id = ?
+            AND ${Database.escapeIdentifier("group")}.status_page_id = ?
         `, [
             statusPageID
         ]);
@@ -91,7 +91,7 @@ router.get("/api/status-page/heartbeat/:slug", cache("1 minutes"), async (reques
                 SELECT * FROM heartbeat
                 WHERE monitor_id = ?
                 ORDER BY time DESC
-            `, [monitorID], 100);
+            `, [ monitorID ], 100);
 
             list = R.convertToBeans("heartbeat", list);
             heartbeatList[monitorID] = list.reverse().map(row => row.toPublicJSON());
@@ -163,10 +163,10 @@ router.get("/api/status-page/:slug/badge", cache("5 minutes"), async (request, r
 
     try {
         let monitorIDList = await R.getCol(`
-            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
-            WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier("group")}
+            WHERE monitor_group.group_id = ${Database.escapeIdentifier("group")}.id
             AND [public] = 1
-            AND ${Database.escapeIdentifier('group')}.status_page_id = ?
+            AND ${Database.escapeIdentifier("group")}.status_page_id = ?
         `, [
             statusPageID
         ]);
@@ -181,7 +181,7 @@ router.get("/api/status-page/:slug/badge", cache("5 minutes"), async (request, r
                 SELECT * FROM heartbeat
                 WHERE monitor_id = ?
                 ORDER BY time DESC
-            `, [monitorID], 1);
+            `, [ monitorID ], 1);
 
             // to be sure, when corresponding monitor not found
             if (beat.length === 0) {

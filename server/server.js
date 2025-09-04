@@ -415,7 +415,7 @@ let needSetup = false;
 
             let user = await login(data.username, data.password);
 
-            log.debug("auth", `Login result for user ${data.username}: ${user ? 'SUCCESS' : 'FAILED'}`);
+            log.debug("auth", `Login result for user ${data.username}: ${user ? "SUCCESS" : "FAILED"}`);
 
             if (user) {
                 log.debug("auth", `User 2FA status: ${user.twofa_status}`);
@@ -448,7 +448,7 @@ let needSetup = false;
                     if (user.twofa_last_token !== data.token && verify) {
                         await afterLogin(socket, user);
 
-                        await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET twofa_last_token = ? WHERE id = ? `, [
+                        await R.exec(`UPDATE ${Database.escapeIdentifier("user")} SET twofa_last_token = ? WHERE id = ? `, [
                             data.token,
                             socket.userID,
                         ]);
@@ -521,7 +521,7 @@ let needSetup = false;
 
                     let uri = `otpauth://totp/Uptime%20Kuma:${user.username}?secret=${encodedSecret}`;
 
-                    await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET twofa_secret = ? WHERE id = ? `, [
+                    await R.exec(`UPDATE ${Database.escapeIdentifier("user")} SET twofa_secret = ? WHERE id = ? `, [
                         newSecret,
                         socket.userID,
                     ]);
@@ -556,7 +556,7 @@ let needSetup = false;
                 checkLogin(socket);
                 await doubleCheckPassword(socket, currentPassword);
 
-                await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET twofa_status = 1 WHERE id = ? `, [
+                await R.exec(`UPDATE ${Database.escapeIdentifier("user")} SET twofa_status = 1 WHERE id = ? `, [
                     socket.userID,
                 ]);
 
@@ -1071,29 +1071,29 @@ let needSetup = false;
                 // Delete related records first to handle MSSQL foreign key constraints
                 // Even though CASCADE is defined, MSSQL might need explicit deletion
                 log.info("manage", `Deleting related records for monitor: ${monitorID}`);
-                
+
                 // Delete statistics tables
-                await R.exec("DELETE FROM stat_minutely WHERE monitor_id = ?", [monitorID]);
-                await R.exec("DELETE FROM stat_hourly WHERE monitor_id = ?", [monitorID]);
-                await R.exec("DELETE FROM stat_daily WHERE monitor_id = ?", [monitorID]);
-                
+                await R.exec("DELETE FROM stat_minutely WHERE monitor_id = ?", [ monitorID ]);
+                await R.exec("DELETE FROM stat_hourly WHERE monitor_id = ?", [ monitorID ]);
+                await R.exec("DELETE FROM stat_daily WHERE monitor_id = ?", [ monitorID ]);
+
                 // Delete heartbeats
-                await R.exec(`DELETE FROM ${Database.escapeIdentifier('heartbeat')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
-                
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier("heartbeat")} WHERE ${Database.escapeIdentifier("monitor_id")} = ?`, [ monitorID ]);
+
                 // Delete monitor associations
-                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_group')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
-                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_maintenance')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
-                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_notification')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
-                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_tag')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
-                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_tls_info')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
-                
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_group")} WHERE ${Database.escapeIdentifier("monitor_id")} = ?`, [ monitorID ]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_maintenance")} WHERE ${Database.escapeIdentifier("monitor_id")} = ?`, [ monitorID ]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_notification")} WHERE ${Database.escapeIdentifier("monitor_id")} = ?`, [ monitorID ]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_tag")} WHERE ${Database.escapeIdentifier("monitor_id")} = ?`, [ monitorID ]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_tls_info")} WHERE ${Database.escapeIdentifier("monitor_id")} = ?`, [ monitorID ]);
+
                 // Delete notification history
-                await R.exec(`DELETE FROM ${Database.escapeIdentifier('notification_sent_history')} WHERE ${Database.escapeIdentifier('monitor_id')} = ?`, [monitorID]);
-                
-                await R.exec(`UPDATE ${Database.escapeIdentifier('monitor')} SET ${Database.escapeIdentifier('parent')} = NULL WHERE ${Database.escapeIdentifier('parent')} = ?`, [monitorID]);
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier("notification_sent_history")} WHERE ${Database.escapeIdentifier("monitor_id")} = ?`, [ monitorID ]);
+
+                await R.exec(`UPDATE ${Database.escapeIdentifier("monitor")} SET ${Database.escapeIdentifier("parent")} = NULL WHERE ${Database.escapeIdentifier("parent")} = ?`, [ monitorID ]);
 
                 // Finally delete the monitor itself
-                await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor')} WHERE ${Database.escapeIdentifier('id')} = ? AND ${Database.escapeIdentifier('user_id')} = ? `, [
+                await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor")} WHERE ${Database.escapeIdentifier("id")} = ? AND ${Database.escapeIdentifier("user_id")} = ? `, [
                     monitorID,
                     socket.userID,
                 ]);
@@ -1146,7 +1146,7 @@ let needSetup = false;
                 let bean = R.dispense("tag");
                 bean.name = tag.name;
                 bean.color = tag.color;
-                
+
                 // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
                 const fallbackCriteria = {
                     name: tag.name,
@@ -1182,7 +1182,7 @@ let needSetup = false;
                 }
                 bean.name = tag.name;
                 bean.color = tag.color;
-                
+
                 // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
                 const fallbackCriteria = {
                     id: tag.id
@@ -1337,7 +1337,7 @@ let needSetup = false;
                         SELECT * FROM heartbeat
                         WHERE monitor_id = ? AND important = 1
                         ORDER BY time DESC
-                    `, [monitorID], count, offset);
+                    `, [ monitorID ], count, offset);
                 }
 
                 // Convert to beans
@@ -1689,7 +1689,7 @@ let needSetup = false;
  * @returns {Promise<void>}
  */
 async function updateMonitorNotification(monitorID, notificationIDList) {
-    await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_notification')} WHERE ${Database.escapeIdentifier('monitor_id')} = ? `, [
+    await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_notification")} WHERE ${Database.escapeIdentifier("monitor_id")} = ? `, [
         monitorID,
     ]);
 
@@ -1698,7 +1698,7 @@ async function updateMonitorNotification(monitorID, notificationIDList) {
             let relation = R.dispense("monitor_notification");
             relation.monitor_id = monitorID;
             relation.notification_id = notificationID;
-            
+
             // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
             const fallbackCriteria = {
                 monitor_id: monitorID,
@@ -1763,7 +1763,7 @@ async function afterLogin(socket, user) {
     // Set server timezone from client browser if not set
     // It should be run once only
     // Use direct database query to avoid circular dependency issues
-    let initTimezoneBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["initServerTimezone"]);
+    let initTimezoneBean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [ "initServerTimezone" ]);
     if (!initTimezoneBean || !initTimezoneBean.value) {
         log.debug("server", "emit initServerTimezone");
         socket.emit("initServerTimezone");
@@ -1784,7 +1784,7 @@ async function initDatabase(testMode = false) {
     // Patch the database
     await Database.patch(port, hostname);
 
-    let jwtSecretBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, [
+    let jwtSecretBean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [
         "jwtSecret",
     ]);
 
@@ -1831,7 +1831,7 @@ async function startMonitor(userID, monitorID) {
 
     // Make sure isStop is explicitly set to false when resuming a monitor
     monitor.isStop = false;
-    
+
     server.monitorList[monitor.id] = monitor;
     await monitor.start(io);
 }
@@ -1916,7 +1916,7 @@ async function shutdownFunction(signal) {
 
     stopBackgroundJobs();
     await cloudflaredStop();
-    
+
     // Stop cache cleaner
     const { Settings } = require("./settings");
     Settings.stopCacheCleaner();

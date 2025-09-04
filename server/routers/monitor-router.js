@@ -17,9 +17,10 @@ router.post("/monitor", async (req, res) => {
 
         const authHeader = req.headers["authorization"];
         const apiKeyHeader = req.headers["x-api-key"];
-        
+
         if (!authHeader && !apiKeyHeader) {
-            return res.status(401).json({ ok: false, msg: "Missing authentication. Provide either Authorization header with Bearer token or X-API-Key header" });
+            return res.status(401).json({ ok: false,
+                msg: "Missing authentication. Provide either Authorization header with Bearer token or X-API-Key header" });
         }
 
         let user = null;
@@ -49,7 +50,8 @@ router.post("/monitor", async (req, res) => {
 
         // If both authentication methods failed
         if (!user || !userID) {
-            return res.status(401).json({ ok: false, msg: "Invalid or expired authentication credentials" });
+            return res.status(401).json({ ok: false,
+                msg: "Invalid or expired authentication credentials" });
         }
 
         const monitor = req.body;
@@ -59,7 +61,7 @@ router.post("/monitor", async (req, res) => {
         delete monitor.notificationIDList;
 
         // Use same logic as websocket 'add' event
-        monitor.accepted_statuscodes = Array.isArray(monitor.accepted_statuscodes) ? monitor.accepted_statuscodes : ["200-299"];
+        monitor.accepted_statuscodes = Array.isArray(monitor.accepted_statuscodes) ? monitor.accepted_statuscodes : [ "200-299" ];
         monitor.kafkaProducerBrokers = Array.isArray(monitor.kafkaProducerBrokers) ? monitor.kafkaProducerBrokers : [];
         monitor.kafkaProducerSaslOptions = typeof monitor.kafkaProducerSaslOptions === "object" ? monitor.kafkaProducerSaslOptions : { mechanism: "None" };
         monitor.conditions = Array.isArray(monitor.conditions) ? monitor.conditions : [];
@@ -84,22 +86,25 @@ router.post("/monitor", async (req, res) => {
         bean.user_id = userID;
 
         bean.validate();
-        
+
         // Use the database utility to store with guaranteed ID
-        bean = await storeWithAutoFallback(bean, "monitor", ["user_id"]);
-        
+        bean = await storeWithAutoFallback(bean, "monitor", [ "user_id" ]);
+
         console.log(`Stored monitor with ID: ${bean.id}`);
-        
+
         await updateMonitorNotification(bean.id, notificationIDList);
         // Create a socket-like object with userID for the server method
         await server.sendUpdateMonitorIntoList({ userID: userID }, bean.id);
         if (monitor.active !== false) {
             await startMonitor(userID, bean.id);
         }
-        res.json({ ok: true, msg: "successAdded", monitorID: bean.id });
+        res.json({ ok: true,
+            msg: "successAdded",
+            monitorID: bean.id });
     } catch (e) {
         console.error("Error adding monitor:", e.message);
-        res.status(500).json({ ok: false, msg: e.message });
+        res.status(500).json({ ok: false,
+            msg: e.message });
     }
 });
 

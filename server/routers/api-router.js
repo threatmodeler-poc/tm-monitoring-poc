@@ -18,6 +18,7 @@ const { UptimeKumaServer } = require("../uptime-kuma-server");
 const { makeBadge } = require("badge-maker");
 const { Prometheus } = require("../prometheus");
 const { UptimeCalculator } = require("../uptime-calculator");
+const { storeWithId, storeWithAutoFallback } = require("../utils/database-utils");
 
 let router = express.Router();
 
@@ -116,18 +117,17 @@ router.all("/api/push/:pushToken", async (request, response) => {
                 if (bean.status === DOWN) {
                     // await this.createIncident(bean);
                 }
-
             }
         }
 
-        await R.store(bean);
+        bean = await storeWithAutoFallback(bean, "heartbeat", [ "monitor_id", "time", "ping", "msg" ]);
 
         // For MSSQL, RedBeanPHP may not properly return the identity value
         // If ID is still null/undefined, fetch it from the database
         if (!bean.id && Database.dbConfig?.type === "mssql") {
-            const lastInserted = await R.findOne("heartbeat", 
-                "monitor_id = ? ORDER BY time DESC", 
-                [monitor.id]
+            const lastInserted = await R.findOne("heartbeat",
+                "monitor_id = ? ORDER BY time DESC",
+                [ monitor.id ]
             );
             if (lastInserted) {
                 bean.id = lastInserted.id;
@@ -172,8 +172,8 @@ router.get("/api/badge/:id/status", cache("5 minutes"), async (request, response
         const overrideValue = value !== undefined ? parseInt(value) : undefined;
 
         let publicMonitor = await R.getRow(`
-                SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
-                WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+                SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier("group")}
+                WHERE monitor_group.group_id = ${Database.escapeIdentifier("group")}.id
                 AND monitor_group.monitor_id = ?
                 AND [public] = 1
             `,
@@ -255,8 +255,8 @@ router.get("/api/badge/:id/uptime/:duration?", cache("5 minutes"), async (reques
         }
 
         let publicMonitor = await R.getRow(`
-                SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
-                WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+                SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier("group")}
+                WHERE monitor_group.group_id = ${Database.escapeIdentifier("group")}.id
                 AND monitor_group.monitor_id = ?
                 AND [public] = 1
             `,
@@ -387,8 +387,8 @@ router.get("/api/badge/:id/avg-response/:duration?", cache("5 minutes"), async (
         const sqlHourOffset = Database.sqlHourOffset();
 
         const publicAvgPing = parseInt(await R.getCell(`
-            SELECT AVG(ping) FROM monitor_group, ${Database.escapeIdentifier('group')}, heartbeat
-            WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+            SELECT AVG(ping) FROM monitor_group, ${Database.escapeIdentifier("group")}, heartbeat
+            WHERE monitor_group.group_id = ${Database.escapeIdentifier("group")}.id
             AND heartbeat.time > ${sqlHourOffset}
             AND heartbeat.ping IS NOT NULL
             AND [public] = 1
@@ -456,8 +456,8 @@ router.get("/api/badge/:id/cert-exp", cache("5 minutes"), async (request, respon
         const overrideValue = value && parseFloat(value);
 
         let publicMonitor = await R.getRow(`
-            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
-            WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier("group")}
+            WHERE monitor_group.group_id = ${Database.escapeIdentifier("group")}.id
             AND monitor_group.monitor_id = ?
             AND [public] = 1
             `,
@@ -541,8 +541,8 @@ router.get("/api/badge/:id/response", cache("5 minutes"), async (request, respon
         const overrideValue = value && parseFloat(value);
 
         let publicMonitor = await R.getRow(`
-            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier('group')}
-            WHERE monitor_group.group_id = ${Database.escapeIdentifier('group')}.id
+            SELECT monitor_group.monitor_id FROM monitor_group, ${Database.escapeIdentifier("group")}
+            WHERE monitor_group.group_id = ${Database.escapeIdentifier("group")}.id
             AND monitor_group.monitor_id = ?
             AND [public] = 1
             `,
