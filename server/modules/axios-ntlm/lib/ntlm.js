@@ -217,4 +217,3 @@ module.exports = {
     decodeType2Message: decodeType2Message,
     createType3Message: createType3Message
 };
-//# sourceMappingURL=ntlm.js.map

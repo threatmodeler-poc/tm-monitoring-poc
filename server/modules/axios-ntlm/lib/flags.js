@@ -74,4 +74,3 @@ module.exports.NTLMFLAG_NEGOTIATE_KEY_EXCHANGE = 1 << 30;
 /* Indicates that the client will provide an encrypted master key in
    the "Session Key" field of the Type 3 message. */
 module.exports.NTLMFLAG_NEGOTIATE_56 = 1 << 31;
-//# sourceMappingURL=flags.js.map

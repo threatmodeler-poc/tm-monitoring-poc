@@ -44,7 +44,7 @@ const isWindows = process.platform === /^win/.test(process.platform);
  * @returns {Promise<Bean>} JWT secret
  */
 exports.initJWTSecret = async () => {
-    let jwtSecretBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, [
+    let jwtSecretBean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [
         "jwtSecret",
     ]);
 

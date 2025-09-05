@@ -100,6 +100,7 @@ async function storeWithId(bean, tableName, fallbackCriteria = null) {
                 values);
         } else {
             // Fallback to finding the most recent record (risky but better than nothing)
+            // Use proper SQL syntax without parameters for ORDER BY
             savedBean = await R.findOne(tableName, "ORDER BY id DESC");
         }
 

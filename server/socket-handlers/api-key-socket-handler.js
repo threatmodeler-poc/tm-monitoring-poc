@@ -24,7 +24,7 @@ module.exports.apiKeySocketHandler = (socket) => {
 
             let hashedKey = await passwordHash.generate(clearKey);
             log.debug("apikeys", `Hashed API Key: ${hashedKey}`);
-            
+
             key["key"] = hashedKey;
             let bean = await APIKey.save(key, socket.userID);
 

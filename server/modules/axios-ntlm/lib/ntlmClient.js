@@ -127,4 +127,3 @@ function NtlmClient(credentials, AxiosConfig) {
     return client;
 }
 exports.NtlmClient = NtlmClient;
-//# sourceMappingURL=ntlmClient.js.map
