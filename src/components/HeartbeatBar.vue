@@ -142,7 +142,7 @@ export default {
 
             return -1 * num;
         },
-        
+
         shortBeatList() {
             if (!this.beatList) {
                 return [];

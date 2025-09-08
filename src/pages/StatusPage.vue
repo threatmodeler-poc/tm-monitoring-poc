@@ -191,9 +191,9 @@
 
                 <!-- Incident Date -->
                 <div class="date mt-3">
-                    {{ $t("Date Created") }}: {{ $root.datetime(incident.createdDate) }} ({{ dateFromNow(incident.createdDate) }})<br />
+                    {{ $t("Date Created") }}: {{ incident.createdDate }} ({{ dateFromNow(incident.createdDate) }})<br />
                     <span v-if="incident.lastUpdatedDate">
-                        {{ $t("Last Updated") }}: {{ $root.datetime(incident.lastUpdatedDate) }} ({{ dateFromNow(incident.lastUpdatedDate) }})
+                        {{ $t("Last Updated") }}: {{ ncident.lastUpdatedDate }} ({{ dateFromNow(incident.lastUpdatedDate) }})
                     </span>
                 </div>
 
@@ -710,7 +710,6 @@ export default {
             if (this.config.icon) {
                 this.imgDataUrl = this.config.icon;
             }
-
             this.incident = res.data.incident;
             this.maintenanceList = res.data.maintenanceList;
             this.$root.publicGroupList = res.data.publicGroupList;
@@ -1035,7 +1034,7 @@ export default {
          * @returns {string} Time difference
          */
         dateFromNow(date) {
-            return dayjs.utc(date).fromNow();
+            return dayjs(date).fromNow();
         },
 
         /**

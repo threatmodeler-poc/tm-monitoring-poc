@@ -44,11 +44,12 @@ function getTopClause(count) {
  * Execute a query with LIMIT clause for cross-database compatibility
  * @param {string} query - The base SQL query
  * @param {Array} params - Query parameters
+ * @param {number} offset - offset
  * @param {number} limit - The limit number
  * @returns {Promise<Array>} Query results
  */
-async function queryWithLimit(query, params = [], limit = 100) {
-    const limitClause = getLimitClause(limit);
+async function queryWithLimit(query, params = [], limit = 100, offset = 0) {
+    const limitClause = getLimitClause(limit, offset);
     const fullQuery = query.trim() + " " + limitClause;
 
     log.debug("database-utils", `fullQuery: ${fullQuery}`, params);

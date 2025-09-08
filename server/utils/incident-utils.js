@@ -2,7 +2,6 @@ const { R } = require("redbean-node");
 const axios = require("axios");
 const crypto = require("crypto");
 const dayjs = require("dayjs");
-const { storeWithId } = require("../utils/database-utils");
 const { storeWithAutoFallback } = require("./database-utils");
 const { log } = require("../../src/util");
 

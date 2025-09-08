@@ -51,7 +51,7 @@ async function sendHeartbeatList(socket, monitorID, toUser = false, overwrite = 
         SELECT * FROM heartbeat
         WHERE monitor_id = ?
         ORDER BY time DESC
-    `, [monitorID], 100);
+    `, [ monitorID ], 100, 0);
 
     let result = list.reverse();
 
@@ -77,7 +77,7 @@ async function sendImportantHeartbeatList(socket, monitorID, toUser = false, ove
         SELECT * FROM heartbeat
         WHERE monitor_id = ? AND important = 1
         ORDER BY time DESC
-    `, [monitorID], 500);
+    `, [ monitorID ], 500, 0);
 
     // Convert to beans
     list = R.convertToBeans("heartbeat", list);

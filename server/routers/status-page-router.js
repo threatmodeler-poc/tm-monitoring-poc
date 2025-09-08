@@ -91,7 +91,7 @@ router.get("/api/status-page/heartbeat/:slug", cache("1 minutes"), async (reques
                 SELECT * FROM heartbeat
                 WHERE monitor_id = ?
                 ORDER BY time DESC
-            `, [ monitorID ], 100);
+            `, [ monitorID ], 100, 0);
 
             list = R.convertToBeans("heartbeat", list);
             heartbeatList[monitorID] = list.reverse().map(row => row.toPublicJSON());
@@ -181,7 +181,7 @@ router.get("/api/status-page/:slug/badge", cache("5 minutes"), async (request, r
                 SELECT * FROM heartbeat
                 WHERE monitor_id = ?
                 ORDER BY time DESC
-            `, [ monitorID ], 1);
+            `, [ monitorID ], 1, 0);
 
             // to be sure, when corresponding monitor not found
             if (beat.length === 0) {

@@ -27,9 +27,9 @@ module.exports.maintenanceSocketHandler = (socket) => {
             // For MSSQL, RedBeanPHP may not properly return the identity value
             // If ID is still null/undefined, fetch it from the database
             if ((maintenanceID === null || maintenanceID === undefined) && Database.dbConfig?.type === "mssql") {
-                const lastInserted = await R.findOne("maintenance", 
-                    `${Database.escapeIdentifier('user_id')} = ? ORDER BY ${Database.escapeIdentifier('id')} DESC`, 
-                    [socket.userID]
+                const lastInserted = await R.findOne("maintenance",
+                    `${Database.escapeIdentifier("user_id")} = ? ORDER BY ${Database.escapeIdentifier("id")} DESC`,
+                    [ socket.userID ]
                 );
                 if (lastInserted) {
                     maintenanceID = lastInserted.id;
@@ -94,7 +94,7 @@ module.exports.maintenanceSocketHandler = (socket) => {
         try {
             checkLogin(socket);
 
-            await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_maintenance')} WHERE ${Database.escapeIdentifier('maintenance_id')} = ?`, [
+            await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_maintenance")} WHERE ${Database.escapeIdentifier("maintenance_id")} = ?`, [
                 maintenanceID
             ]);
 
@@ -129,7 +129,7 @@ module.exports.maintenanceSocketHandler = (socket) => {
         try {
             checkLogin(socket);
 
-            await R.exec(`DELETE FROM ${Database.escapeIdentifier('maintenance_status_page')} WHERE ${Database.escapeIdentifier('maintenance_id')} = ?`, [
+            await R.exec(`DELETE FROM ${Database.escapeIdentifier("maintenance_status_page")} WHERE ${Database.escapeIdentifier("maintenance_id")} = ?`, [
                 maintenanceID
             ]);
 
@@ -258,10 +258,20 @@ module.exports.maintenanceSocketHandler = (socket) => {
                 delete server.maintenanceList[maintenanceID];
             }
 
-            await R.exec(`DELETE FROM ${Database.escapeIdentifier('maintenance')} WHERE ${Database.escapeIdentifier('id')} = ? AND ${Database.escapeIdentifier('user_id')} = ? `, [
-                maintenanceID,
-                socket.userID,
-            ]);
+            await R.exec(
+                `DELETE FROM ${Database.escapeIdentifier("maintenance_status_page")} WHERE maintenance_id = ?`,
+                [ maintenanceID ]
+            );
+
+            await R.exec(
+                `DELETE FROM ${Database.escapeIdentifier("monitor_maintenance")} WHERE maintenance_id = ?`,
+                [ maintenanceID ]
+            );
+
+            await R.exec(
+                `DELETE FROM ${Database.escapeIdentifier("maintenance")} WHERE ${Database.escapeIdentifier("id")} = ? AND ${Database.escapeIdentifier("user_id")} = ? `,
+                [ maintenanceID, socket.userID ]
+            );
 
             apicache.clear();
 
