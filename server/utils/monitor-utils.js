@@ -18,7 +18,7 @@ async function updateMonitorNotification(monitorID, notificationIDList) {
             let relation = R.dispense("monitor_notification");
             relation.monitor_id = monitorID;
             relation.notification_id = notificationID;
-            
+
             // Use storeWithId to handle MSSQL compatibility where bean.id might not be populated
             const fallbackCriteria = {
                 monitor_id: monitorID,

@@ -426,7 +426,6 @@ class Database {
      */
     static async initMSSQL() {
         log.debug("db", "Checking if MSSQL database exists...");
-
         let hasTable = await R.hasTable("docker_host");
         if (!hasTable) {
             const { createTablesMssql } = require("../db/knex_init_db");
@@ -810,10 +809,10 @@ class Database {
         if (!datetime) {
             return null;
         }
-        
+
         const dayjs = require("dayjs");
         let dayjsObj;
-        
+
         try {
             if (typeof datetime === "string") {
                 dayjsObj = dayjs(datetime);
@@ -822,12 +821,12 @@ class Database {
             } else {
                 dayjsObj = dayjs();
             }
-            
+
             if (!dayjsObj.isValid()) {
                 console.warn("Database.formatDateTime: Invalid datetime value:", datetime);
                 return datetime; // Return original value if invalid
             }
-            
+
             if (Database.dbConfig && Database.dbConfig.type === "mssql") {
                 // MSSQL requires YYYY-MM-DD HH:mm:ss format
                 return dayjsObj.format("YYYY-MM-DD HH:mm:ss");
@@ -980,7 +979,7 @@ class Database {
         migrationServer?.update(msg);
 
         await Database.clearHeartbeatData(true);
-        
+
         // Use direct database query instead of Settings.set to avoid circular dependency
         let migratedBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
         if (!migratedBean) {
@@ -989,7 +988,7 @@ class Database {
         }
         migratedBean.value = "migrated";
         await R.store(migratedBean);
-        
+
         await migrationServer?.stop();
 
         if (monitors.length > 0) {
@@ -1012,7 +1011,7 @@ class Database {
             if (detailedLog) {
                 log.info("db", "Deleting non-important heartbeats for monitor " + monitor.id);
             }
-            
+
             const limitClause = getLimitClause(100);
             await R.exec(`
                 DELETE FROM heartbeat

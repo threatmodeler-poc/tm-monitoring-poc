@@ -59,6 +59,7 @@ if (process.env.UPTIME_KUMA_WS_ORIGIN_CHECK === "bypass") {
 }
 
 const checkVersion = require("./check-version");
+checkVersion.enableCheckUpdate(false);
 log.info("server", "ThreatModeler Monitor Version: " + checkVersion.version);
 
 log.info("server", "Loading modules");

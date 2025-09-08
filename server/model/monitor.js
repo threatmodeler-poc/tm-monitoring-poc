@@ -24,11 +24,13 @@ const Gamedig = require("gamedig");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const Database = require("../database");
-const { UptimeCalculator } = require("../uptime-calculator");   
+const { UptimeCalculator } = require("../uptime-calculator");
 const { CookieJar } = require("tough-cookie");
 const { HttpsCookieAgent } = require("http-cookie-agent/http");
 const https = require("https");
 const http = require("http");
+const { createIncidentForFailure, resolveIncidentForRecovery } = require("../utils/incident-utils");
+const { storeWithAutoFallback } = require("../utils/database-utils");
 
 const rootCertificates = rootCertificatesFingerprints();
 
@@ -351,7 +353,7 @@ class Monitor extends BeanModel {
 
         // Explicitly set isStop to false when starting a monitor
         this.isStop = false;
-        
+
         this.prometheus = new Prometheus(this);
 
         const beat = async () => {
@@ -619,9 +621,7 @@ class Monitor extends BeanModel {
                         } else {
                             throw new Error(`JSON query does not pass (comparing ${response} ${this.jsonPathOperator} ${this.expectedValue})`);
                         }
-
                     }
-
                 } else if (this.type === "port") {
                     bean.ping = await tcping(this.hostname, this.port);
                     bean.msg = "";
@@ -982,24 +982,16 @@ class Monitor extends BeanModel {
             bean.end_time = R.isoDateTimeMillis(endTimeDayjs);
 
             // create incident here if necessary
-            if (bean.status === DOWN) {
-                // await this.createIncident(bean);
+            log.debug("monitor", `currentBeat: status=${bean.status}, ping=${bean.ping}, msg=${bean.msg} \n previousBeat: ${previousBeat ? `status=${previousBeat.status}` : "null"}`);
+            if (bean.status !== UP && previousBeat?.status === UP) {
+                await createIncidentForFailure(this, bean);
+            } else if (bean.status === UP && previousBeat?.status !== UP) {
+                await resolveIncidentForRecovery(this);
             }
 
             // Store to database first to get the auto-incremented ID
-            await R.store(bean);
-            
-            // For MSSQL, RedBeanPHP may not properly return the identity value
-            // If ID is still null/undefined, fetch it from the database
-            if (!bean.id && Database.dbConfig?.type === "mssql") {
-                const lastInserted = await R.findOne("heartbeat", 
-                    "monitor_id = ? ORDER BY time DESC", 
-                    [this.id]
-                );
-                if (lastInserted) {
-                    bean.id = lastInserted.id;
-                }
-            }
+            let tempBean = await storeWithAutoFallback(bean, "heartbeat", [ "monitor_id" ]);
+            bean.id = tempBean.id;
 
             // Send to frontend after storing to ensure ID is available
             io.to(this.user_id).emit("heartbeat", bean.toJSON());
@@ -1182,7 +1174,7 @@ class Monitor extends BeanModel {
                 if (isValidObjects) {
                     if (oldCertInfo.certInfo.fingerprint256 !== checkCertificateResult.certInfo.fingerprint256) {
                         log.debug("monitor", "Resetting sent_history");
-                        await R.exec(`DELETE FROM ${Database.escapeIdentifier('notification_sent_history')} WHERE ${Database.escapeIdentifier('type')} = 'certificate' AND ${Database.escapeIdentifier('monitor_id')} = ?`, [
+                        await R.exec(`DELETE FROM ${Database.escapeIdentifier("notification_sent_history")} WHERE ${Database.escapeIdentifier("type")} = 'certificate' AND ${Database.escapeIdentifier("monitor_id")} = ?`, [
                             this.id
                         ]);
                     } else {
@@ -1443,7 +1435,7 @@ class Monitor extends BeanModel {
      */
     async sendCertNotificationByTargetDays(certCN, certType, daysRemaining, targetDays, notificationList) {
 
-        let row = await R.getRow(`SELECT * FROM ${Database.escapeIdentifier('notification_sent_history')} WHERE ${Database.escapeIdentifier('type')} = ? AND ${Database.escapeIdentifier('monitor_id')} = ? AND ${Database.escapeIdentifier('days')} <= ?`, [
+        let row = await R.getRow(`SELECT * FROM ${Database.escapeIdentifier("notification_sent_history")} WHERE ${Database.escapeIdentifier("type")} = ? AND ${Database.escapeIdentifier("monitor_id")} = ? AND ${Database.escapeIdentifier("days")} <= ?`, [
             "certificate",
             this.id,
             targetDays,
@@ -1470,7 +1462,7 @@ class Monitor extends BeanModel {
         }
 
         if (sent) {
-            await R.exec(`INSERT INTO ${Database.escapeIdentifier('notification_sent_history')} (${Database.escapeIdentifier('type')}, ${Database.escapeIdentifier('monitor_id')}, ${Database.escapeIdentifier('days')}) VALUES(?, ?, ?)`, [
+            await R.exec(`INSERT INTO ${Database.escapeIdentifier("notification_sent_history")} (${Database.escapeIdentifier("type")}, ${Database.escapeIdentifier("monitor_id")}, ${Database.escapeIdentifier("days")}) VALUES(?, ?, ?)`, [
                 "certificate",
                 this.id,
                 targetDays,
@@ -1496,8 +1488,8 @@ class Monitor extends BeanModel {
      */
     static async isUnderMaintenance(monitorID) {
         const maintenanceIDList = await R.getCol(`
-            SELECT ${Database.escapeIdentifier('maintenance_id')} FROM ${Database.escapeIdentifier('monitor_maintenance')}
-            WHERE ${Database.escapeIdentifier('monitor_id')} = ?
+            SELECT ${Database.escapeIdentifier("maintenance_id")} FROM ${Database.escapeIdentifier("monitor_maintenance")}
+            WHERE ${Database.escapeIdentifier("monitor_id")} = ?
         `, [ monitorID ]);
 
         for (const maintenanceID of maintenanceIDList) {
@@ -1738,7 +1730,7 @@ class Monitor extends BeanModel {
      * @returns {Promise<void>}
      */
     static async unlinkAllChildren(groupID) {
-        return await R.exec(`UPDATE ${Database.escapeIdentifier('monitor')} SET parent = ? WHERE parent = ? `, [
+        return await R.exec(`UPDATE ${Database.escapeIdentifier("monitor")} SET parent = ? WHERE parent = ? `, [
             null, groupID
         ]);
     }

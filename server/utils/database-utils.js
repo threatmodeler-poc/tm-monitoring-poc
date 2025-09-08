@@ -101,7 +101,7 @@ async function storeWithId(bean, tableName, fallbackCriteria = null) {
         } else {
             // Fallback to finding the most recent record (risky but better than nothing)
             // Use proper SQL syntax without parameters for ORDER BY
-            savedBean = await R.findOne(tableName, "ORDER BY id DESC");
+            savedBean = await R.findOne(tableName, "ORDER BY 1 DESC");
         }
 
         if (savedBean) {
@@ -191,13 +191,13 @@ async function upsert(tableName, data, keyColumns) {
 
         if (nonKeyColumns.length > 0) {
             sql += `
-                WHEN MATCHED THEN 
+                WHEN MATCHED THEN
                     UPDATE SET ${updateSet}
             `;
         }
 
         sql += `
-            WHEN NOT MATCHED THEN 
+            WHEN NOT MATCHED THEN
                 INSERT (${insertColumns}) VALUES (${insertValues});
         `;
 
