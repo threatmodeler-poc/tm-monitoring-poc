@@ -627,7 +627,7 @@ class Database {
                 id
             ]);
 
-            await R.exec(`UPDATE ${Database.escapeIdentifier('group')} SET status_page_id = ? WHERE status_page_id IS NULL`, [
+            await R.exec(`UPDATE ${Database.escapeIdentifier("group")} SET status_page_id = ? WHERE status_page_id IS NULL`, [
                 id
             ]);
 
@@ -827,13 +827,7 @@ class Database {
                 return datetime; // Return original value if invalid
             }
 
-            if (Database.dbConfig && Database.dbConfig.type === "mssql") {
-                // MSSQL requires YYYY-MM-DD HH:mm:ss format
-                return dayjsObj.format("YYYY-MM-DD HH:mm:ss");
-            } else {
-                // For other databases (MySQL, SQLite), ISO string is fine
-                return dayjsObj.toISOString();
-            }
+            return dayjsObj.toISOString();
         } catch (error) {
             console.warn("Database.formatDateTime: Error formatting datetime:", error.message);
             return datetime; // Return original value on error
@@ -858,7 +852,7 @@ class Database {
         if (process.env.SET_MIGRATE_AGGREGATE_TABLE_TO_TRUE === "1") {
             log.warn("db", "SET_MIGRATE_AGGREGATE_TABLE_TO_TRUE is set to 1, skipping aggregate table migration forever (for 2.0.0-dev users)");
             // Use direct database query instead of Settings.set to avoid circular dependency
-            let bean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
+            let bean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [ "migrateAggregateTableState" ]);
             if (!bean) {
                 bean = R.dispense("setting");
                 bean.key = "migrateAggregateTableState";
@@ -868,7 +862,7 @@ class Database {
         }
 
         // Use direct database query instead of Settings.get to avoid circular dependency
-        let migrateStateBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
+        let migrateStateBean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [ "migrateAggregateTableState" ]);
         let migrateState = migrateStateBean ? migrateStateBean.value : null;
 
         // Skip if already migrated
@@ -916,7 +910,7 @@ class Database {
         }
 
         // Use direct database query instead of Settings.set to avoid circular dependency
-        let migratingBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
+        let migratingBean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [ "migrateAggregateTableState" ]);
         if (!migratingBean) {
             migratingBean = R.dispense("setting");
             migratingBean.key = "migrateAggregateTableState";
@@ -981,7 +975,7 @@ class Database {
         await Database.clearHeartbeatData(true);
 
         // Use direct database query instead of Settings.set to avoid circular dependency
-        let migratedBean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, ["migrateAggregateTableState"]);
+        let migratedBean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [ "migrateAggregateTableState" ]);
         if (!migratedBean) {
             migratedBean = R.dispense("setting");
             migratedBean.key = "migrateAggregateTableState";
