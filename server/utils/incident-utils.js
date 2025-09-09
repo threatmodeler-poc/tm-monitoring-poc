@@ -3,7 +3,7 @@ const axios = require("axios");
 const crypto = require("crypto");
 const dayjs = require("dayjs");
 const { storeWithAutoFallback } = require("./database-utils");
-const { log } = require("../../src/util");
+const { log, MAINTENANCE } = require("../../src/util");
 
 // Work flow
 // First create local incident - in mssql db
@@ -38,16 +38,17 @@ class IncidentService {
             const description = `Monitor "${monitor.name}" is down. Error: ${heartbeat.msg || "Unknown error"}`;
 
             // Also create incident via external API if configured
-            let incidentResponse = await IncidentService.callExternalIncidentAPI({
-                siteUrl: monitor.url || monitor.name,
-                region: process.env.AWS_DEFAULT_REGION || "us-east-1",
-                title: title,
-                description: description,
-                updatedBy: process.env.INCIDENT_UPDATED_BY || "uptime-kuma@system.com",
-                incidentStatus: "Identified",
-                incidentImpact: "Major",
-                monitorId: monitor.id,
-            });
+            let incidentResponse =
+                await IncidentService.callExternalIncidentAPI({
+                    siteUrl: monitor.url || monitor.name,
+                    region: process.env.AWS_DEFAULT_REGION || "us-east-1",
+                    title: title,
+                    description: description,
+                    updatedBy: process.env.INCIDENT_UPDATED_BY || "uptime-kuma@system.com",
+                    incidentStatus: heartbeat.status === MAINTENANCE ? "Maintenance" : "Identified",
+                    incidentImpact: heartbeat.status === MAINTENANCE ? "None" : "Minor",
+                    monitorId: monitor.id,
+                });
 
             let incidentId;
             if (incidentResponse && incidentResponse.status === 201 && incidentResponse.data) {
@@ -73,7 +74,7 @@ class IncidentService {
                         monitorId: monitor.id,
                         title: title,
                         content: description,
-                        style: "danger",
+                        style: heartbeat.status === MAINTENANCE ? "info" : "danger",
                         url: monitor.url || "",
                         status_page_id: 1,
                     });
