@@ -46,7 +46,7 @@ class IncidentService {
                     description: description,
                     updatedBy: process.env.INCIDENT_UPDATED_BY || "uptime-kuma@system.com",
                     incidentStatus: heartbeat.status === MAINTENANCE ? "Maintenance" : "Identified",
-                    incidentImpact: heartbeat.status === MAINTENANCE ? "None" : "Minor",
+                    incidentImpact: heartbeat.status === MAINTENANCE ? "Minor" : "Major",
                     monitorId: monitor.id,
                 });
 
@@ -183,6 +183,7 @@ class IncidentService {
                         updatedBy: incidentData.updatedBy,
                         incidentStatus: incidentData.incidentStatus,
                         incidentImpact: incidentData.incidentImpact,
+                        // monitorId: incidentData.monitorId,
                     },
                     {
                         headers: {
@@ -220,7 +221,7 @@ class IncidentService {
 
             return temp;
         } catch (error) {
-            log.error("incident", "Failed to call external incident API:", error.message);
+            log.error("incident", `Failed to call external incident API: ${JSON.stringify(error.response.data)}`);
             // Don't throw error - we don't want to break monitor functionality if external API fails
             return null;
         }

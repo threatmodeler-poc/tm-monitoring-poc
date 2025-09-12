@@ -448,12 +448,12 @@ class Maintenance extends BeanModel {
         }
 
         // Check if the maintenance is started
-        if (this.start_date && dayjs().isBefore(dayjs.tz(this.start_date, await this.getTimezone()))) {
+        if (this.start_date && dayjs().isBefore(dayjs.tz(this.start_date, "UTC"))) {
             return "scheduled";
         }
 
         // Check if the maintenance is ended
-        if (this.end_date && dayjs().isAfter(dayjs.tz(this.end_date, await this.getTimezone()))) {
+        if (this.end_date && dayjs().isAfter(dayjs.tz(this.end_date, "UTC"))) {
             return "ended";
         }
 

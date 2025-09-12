@@ -19,6 +19,8 @@ const sslKeyPassphrase = args["ssl-key-passphrase"] || process.env.UPTIME_KUMA_S
 
 const isSSL = sslKey && sslCert;
 
+const autoRefreshInterval = process.env.STATUS_PAGE_REFRESH_INTERVAL ?? 300;
+
 /**
  * Get the local WebSocket URL
  * @returns {string} The local WebSocket URL
@@ -43,4 +45,5 @@ module.exports = {
     isSSL,
     localWebSocketURL,
     demoMode,
+    autoRefreshInterval,
 };
