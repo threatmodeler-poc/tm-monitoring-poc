@@ -57,6 +57,7 @@ class Monitor extends BeanModel {
             name: this.name,
             sendUrl: this.sendUrl,
             type: this.type,
+            incident_id: this.incident_id,
         };
 
         if (this.sendUrl) {
@@ -169,6 +170,9 @@ class Monitor extends BeanModel {
             ping_numeric: this.isPingNumeric(),
             ping_count: this.ping_count,
             ping_per_request_timeout: this.ping_per_request_timeout,
+
+            // Incident
+            incident_id: this.incident_id,
         };
 
         if (includeSensitiveData) {
