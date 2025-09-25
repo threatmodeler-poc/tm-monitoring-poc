@@ -7,8 +7,9 @@ const Database = require("../database");
 const apicache = require("../modules/apicache");
 const StatusPage = require("../model/status_page");
 const { UptimeKumaServer } = require("../uptime-kuma-server");
-const { storeWithId } = require("../utils/database-utils");
+const { storeWithId, storeWithAutoFallback } = require("../utils/database-utils");
 const config = require("dotenv");
+const { updateIncident } = require("../utils/incident-utils");
 
 /**
  * Socket handlers for status page
@@ -57,7 +58,14 @@ module.exports.statusPageSocketHandler = (socket) => {
                 incidentBean.createdDate = R.isoDateTime(dayjs.utc());
             }
 
-            await R.store(incidentBean);
+            let tBean = await storeWithAutoFallback(incidentBean, "incident", [ "status_page_id", "pin" ]);
+            if (tBean.id > 0) {
+                incidentBean.id = tBean.id;
+            }
+
+            if (incidentBean.incident_id) {
+                await updateIncident(incidentBean.incident_id, incident.title, incident.content);
+            }
 
             callback({
                 ok: true,
@@ -170,7 +178,10 @@ module.exports.statusPageSocketHandler = (socket) => {
             statusPage.modified_date = R.isoDateTime();
             statusPage.google_analytics_tag_id = config.googleAnalyticsId;
 
-            await R.store(statusPage);
+            let tempStatusPageBean = await storeWithAutoFallback(statusPage, "status_page", [ "slug", "title" ]);
+            if (tempStatusPageBean.id > 0) {
+                statusPage.id = tempStatusPageBean.id;
+            }
 
             await statusPage.updateDomainNameList(config.domainNameList);
             await StatusPage.loadDomainMappingList();

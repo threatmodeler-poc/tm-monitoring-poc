@@ -22,7 +22,9 @@ class IncidentService {
      */
     static async createIncidentForFailure(monitor, heartbeat) {
         try {
-            let monitorIncidentId = await IncidentService.GetMonitorIncident(monitor.id);
+            let monitorIncidentId = await IncidentService.GetMonitorIncident(
+                monitor.id
+            );
 
             if (monitorIncidentId) {
                 return;
@@ -64,22 +66,29 @@ class IncidentService {
             if (incidentId) {
                 monitor.incident_id = incidentId;
 
-                await IncidentService.UpdateMonitorIncident(monitor.id, incidentId, false);
+                await IncidentService.UpdateMonitorIncident(
+                    monitor.id,
+                    incidentId,
+                    false
+                );
 
                 // Create incident in local database
                 try {
                     const localIncidentId =
-                        await IncidentService.updateLocalIncident({
-                            incidentId: incidentId,
-                            monitorId: monitor.id,
-                            title: title,
-                            content: description,
-                            style:
-                                heartbeat.status === MAINTENANCE
-                                    ? "info"
-                                    : "danger",
-                            url: monitor.url || "",
-                        }, false);
+                        await IncidentService.updateLocalIncident(
+                            {
+                                incidentId: incidentId,
+                                monitorId: monitor.id,
+                                title: title,
+                                content: description,
+                                style:
+                                    heartbeat.status === MAINTENANCE
+                                        ? "info"
+                                        : "danger",
+                                url: monitor.url || "",
+                            },
+                            false
+                        );
 
                     log.info(
                         "incident",
@@ -88,10 +97,10 @@ class IncidentService {
                 } catch (incidentError) {
                     log.error(
                         "incident",
-                            `Failed to create local incident for monitor ${monitor.id}:`,
-                            incidentError?.message ??
-                                incidentError ??
-                                "Unknown error"
+                        `Failed to create local incident for monitor ${monitor.id}:`,
+                        incidentError?.message ??
+                            incidentError ??
+                            "Unknown error"
                     );
                     // Continue execution even if incident creation fails
                 }
@@ -101,6 +110,39 @@ class IncidentService {
                 "incident",
                 "Failed to create incident:",
                 error?.message ?? error ?? "Unknown error"
+            );
+        }
+    }
+
+    /**
+     * Update incident when monitor comes back up
+     * @param {string} incidentId
+     * @param {string} title
+     * @param {string} content
+     * @returns {Promise<void>}
+     */
+    static async updateIncident(incidentId, title, content) {
+        try {
+            if (incidentId) {
+                let apiResonse = await IncidentService.callExternalIncidentAPI(
+                    {
+                        incidentId: incidentId,
+                        region: "us-east-1",
+                        title: title,
+                        description: content,
+                        updatedBy:
+                            process.env.INCIDENT_UPDATED_BY ||
+                            "ThreatModelerMontioringTool@system.com",
+                        incidentStatus: "Investigating",
+                    },
+                    true
+                );
+            }
+        } catch (error) {
+            log.error(
+                "incident",
+                "Failed to update incident:",
+                error?.message || error || "Unknown error"
             );
         }
     }
@@ -119,14 +161,20 @@ class IncidentService {
                         region: "us-east-1",
                         title: `RESOLVED: Monitor Up: ${monitor.name}`,
                         description: `Monitor "${monitor.name}" has recovered. Service is now operational.`,
-                        updatedBy: process.env.INCIDENT_UPDATED_BY || "ThreatModelerMontioringTool@system.com",
+                        updatedBy:
+                            process.env.INCIDENT_UPDATED_BY ||
+                            "ThreatModelerMontioringTool@system.com",
                         incidentStatus: "Resolved",
                     },
                     true
                 );
 
                 if (apiResonse && apiResonse?.status === 200) {
-                    await IncidentService.UpdateMonitorIncident(monitor.id, monitor.incident_id, true);
+                    await IncidentService.UpdateMonitorIncident(
+                        monitor.id,
+                        monitor.incident_id,
+                        true
+                    );
 
                     await IncidentService.updateLocalIncident(
                         {
@@ -243,6 +291,7 @@ class IncidentService {
                 response = await axios.post(
                     apiUrl,
                     {
+                        monitorId: incidentData.monitorId,
                         incidentId: incidentData.incidentId,
                         siteUrl: incidentData.siteUrl,
                         region: incidentData.region,
@@ -319,7 +368,9 @@ class IncidentService {
         incidentId,
         isResolved = false
     ) {
-        let monitorIncidentId = await IncidentService.GetMonitorIncident(monitorId);
+        let monitorIncidentId = await IncidentService.GetMonitorIncident(
+            monitorId
+        );
 
         if (!isResolved) {
             await R.exec("UPDATE monitor SET incident_id = ? WHERE id = ?", [
@@ -346,7 +397,7 @@ class IncidentService {
      * @param isResolved
      * @returns {Promise<string>}
      */
-    static async GetMonitorIncident( monitorId ) {
+    static async GetMonitorIncident(monitorId) {
         let monitor = await R.findOne("monitor", "id = ?", [ monitorId ]);
         return monitor.incident_id;
     }
