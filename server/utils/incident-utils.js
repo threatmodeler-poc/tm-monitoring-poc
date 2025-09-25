@@ -42,9 +42,7 @@ class IncidentService {
                     title: title,
                     region: "us-east-1",
                     description: description,
-                    updatedBy:
-                        process.env.INCIDENT_UPDATED_BY ||
-                        "ThreatModelerMonitoringTool@system.com",
+                    updatedBy: "ThreatModelerMonitoringTool@system.com",
                     incidentStatus:
                         heartbeat.status === MAINTENANCE
                             ? "Maintenance"
@@ -161,9 +159,7 @@ class IncidentService {
                         region: "us-east-1",
                         title: `RESOLVED: Monitor Up: ${monitor.name}`,
                         description: `Monitor "${monitor.name}" has recovered. Service is now operational.`,
-                        updatedBy:
-                            process.env.INCIDENT_UPDATED_BY ||
-                            "ThreatModelerMontioringTool@system.com",
+                        updatedBy: "ThreatModelerMontioringTool@system.com",
                         incidentStatus: "Resolved",
                     },
                     true
