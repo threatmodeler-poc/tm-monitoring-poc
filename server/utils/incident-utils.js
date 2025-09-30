@@ -40,7 +40,7 @@ class IncidentService {
                 await IncidentService.callExternalIncidentAPI({
                     siteUrl: monitor.url || monitor.name,
                     title: title,
-                    region: "us-east-1",
+                    region: "us-east-1", // dummy, will be replaced by the api that is being called
                     description: description,
                     updatedBy: "ThreatModelerMonitoringTool@system.com",
                     incidentStatus:
@@ -50,6 +50,7 @@ class IncidentService {
                     incidentImpact:
                         heartbeat.status === MAINTENANCE ? "Minor" : "Major",
                     monitorId: monitor.id,
+                    serviceType: await IncidentService.GetMonitorServiceType(monitor),
                 });
 
             let incidentId;
@@ -125,7 +126,7 @@ class IncidentService {
                 let apiResonse = await IncidentService.callExternalIncidentAPI(
                     {
                         incidentId: incidentId,
-                        region: "us-east-1",
+                        region: "us-east-1", // dummy, will be replaced by the api that is being called
                         title: title,
                         description: content,
                         updatedBy:
@@ -275,6 +276,7 @@ class IncidentService {
                         incidentStatus: incidentData.incidentStatus,
                         incidentImpact: incidentData.incidentImpact,
                         monitorId: incidentData.monitorId,
+                        serviceType: incidentData.serviceType,
                     },
                     {
                         headers: {
@@ -296,6 +298,7 @@ class IncidentService {
                         updatedBy: incidentData.updatedBy,
                         incidentStatus: incidentData.incidentStatus,
                         incidentImpact: incidentData.incidentImpact,
+                        serviceType: incidentData.serviceType
                     },
                     {
                         headers: {
@@ -396,6 +399,26 @@ class IncidentService {
     static async GetMonitorIncident(monitorId) {
         let monitor = await R.findOne("monitor", "id = ?", [ monitorId ]);
         return monitor.incident_id;
+    }
+
+    /**
+     * Get Service Type of monitor
+     * @param monitor
+     * @returns {Promise<string>}
+     */
+    static async GetMonitorServiceType(monitor) {
+        let tag = await R.findOne("tag", " name = ? ", [ "ServiceType" ]);
+        if (tag?.id <= 0) {
+            return "THREATMODELER";
+        }
+
+        let monitorTag = await R.findOne("monitor_tag", "monitor_id = ? AND tag_id = ?", [ monitor.id, tag.id ]);
+
+        if (monitorTag?.id < 0) {
+            return "THREATMODELER";
+        }
+
+        return monitorTag.value;
     }
 }
 
