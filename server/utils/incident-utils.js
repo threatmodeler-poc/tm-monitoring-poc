@@ -30,8 +30,10 @@ class IncidentService {
                 return;
             }
 
-            const title = `Monitor Down: ${monitor.name}`;
-            const description = `Monitor ${monitor.name} is down. Error: ${
+            let serviceType = await IncidentService.GetMonitorServiceType(monitor);
+
+            const title = `Service Down: ${serviceType}`;
+            const description = `Service ${serviceType} is down. Error: ${
                 heartbeat.msg || "Unknown error"
             }`;
 
@@ -50,7 +52,7 @@ class IncidentService {
                     incidentImpact:
                         heartbeat.status === MAINTENANCE ? "Minor" : "Major",
                     monitorId: monitor.id,
-                    serviceType: await IncidentService.GetMonitorServiceType(monitor),
+                    serviceType: serviceType,
                 });
 
             let incidentId;
@@ -153,13 +155,15 @@ class IncidentService {
      */
     static async resolveIncidentForRecovery(monitor) {
         try {
+            let serviceType = await IncidentService.GetMonitorServiceType(monitor);
+
             if (monitor.incident_id) {
                 let apiResonse = await IncidentService.callExternalIncidentAPI(
                     {
                         incidentId: monitor.incident_id,
                         region: "us-east-1",
-                        title: `RESOLVED: Monitor Up: ${monitor.name}`,
-                        description: `Monitor "${monitor.name}" has recovered. Service is now operational.`,
+                        title: `RESOLVED: Service Up: ${serviceType}`,
+                        description: `Service "${serviceType}" has recovered. Service is now operational.`,
                         updatedBy: "ThreatModelerMontioringTool@system.com",
                         incidentStatus: "Resolved",
                     },
