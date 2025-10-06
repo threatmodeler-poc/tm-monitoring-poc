@@ -18,7 +18,7 @@ const { UptimeKumaServer } = require("../uptime-kuma-server");
 const { makeBadge } = require("badge-maker");
 const { Prometheus } = require("../prometheus");
 const { UptimeCalculator } = require("../uptime-calculator");
-const { storeWithId, storeWithAutoFallback } = require("../utils/database-utils");
+const { storeWithAutoFallback } = require("../utils/database-utils");
 
 let router = express.Router();
 
@@ -587,6 +587,26 @@ router.get("/api/badge/:id/response", cache("5 minutes"), async (request, respon
 
         response.type("image/svg+xml");
         response.send(svg);
+    } catch (error) {
+        sendHttpError(response, error.message);
+    }
+});
+
+// JSON endpoint for uptime percentage
+router.get("/api/uptime/:id/:duration?", async (request, response) => {
+    allowAllOrigin(response);
+    try {
+        const requestedMonitorId = parseInt(request.params.id, 10);
+        const requestedDuration = request.params.duration !== undefined ? request.params.duration : "24h";
+        const uptimeCalculator = await UptimeCalculator.getUptimeCalculator(requestedMonitorId);
+        const data = uptimeCalculator.getDataByDuration(requestedDuration);
+        response.json({
+            ok: true,
+            monitorId: requestedMonitorId,
+            duration: requestedDuration,
+            uptime: data.uptime,
+            avgPing: data.avgPing
+        });
     } catch (error) {
         sendHttpError(response, error.message);
     }
