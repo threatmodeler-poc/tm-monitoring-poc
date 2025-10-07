@@ -592,9 +592,43 @@ router.get("/api/badge/:id/response", cache("5 minutes"), async (request, respon
     }
 });
 
+// JSON endpoint for uptime by URL
+router.get("/api/uptime/url", async (request, response) => {
+    try {
+        const targetUrl = request.query.url;
+        if (!targetUrl) {
+            throw new Error("URL parameter is required");
+        }
+        const requestedDuration = request.query.duration !== undefined ? request.query.duration : "24h";
+        // Use a LIKE query to support partial URL matching
+        const beans = await R.find(
+            "monitor",
+            "url LIKE ?",
+            [ `%${targetUrl}%` ]
+        );
+        const results = [];
+        for (const bean of beans) {
+            const uptimeCalculator = await UptimeCalculator.getUptimeCalculator(bean.id);
+            const data = uptimeCalculator.getDataByDuration(requestedDuration);
+            results.push({
+                monitorId: bean.id,
+                uptime: data.uptime,
+                avgPing: data.avgPing,
+            });
+        }
+        response.json({
+            ok: true,
+            url: targetUrl,
+            duration: requestedDuration,
+            results,
+        });
+    } catch (error) {
+        sendHttpError(response, error.message);
+    }
+});
+
 // JSON endpoint for uptime percentage
 router.get("/api/uptime/:id/:duration?", async (request, response) => {
-    allowAllOrigin(response);
     try {
         const requestedMonitorId = parseInt(request.params.id, 10);
         const requestedDuration = request.params.duration !== undefined ? request.params.duration : "24h";

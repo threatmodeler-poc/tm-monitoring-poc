@@ -162,7 +162,7 @@ class IncidentService {
                     {
                         incidentId: monitor.incident_id,
                         region: "us-east-1",
-                        title: `RESOLVED: Service Up: ${serviceType}`,
+                        title: "",
                         description: `Service "${serviceType}" has recovered. Service is now operational.`,
                         updatedBy: "ThreatModelerMontioringTool@system.com",
                         incidentStatus: "Resolved",
