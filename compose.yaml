@@ -1,9 +1,26 @@
+version: "3.9"
+
 services:
-  uptime-kuma:
-    image: louislam/uptime-kuma:1
+  tm-monitoring-tool:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: tm-monitoring-tool:1.0.0
+    container_name: tm-monitor
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
     volumes:
       - ./data:/app/data
-    ports:
-      # <Host Port>:<Container Port>
-      - 3001:3001
-    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+    networks:
+      - tm-net
+  # Removed default uptime-kuma image; building via tm-monitoring-tool service
+
+volumes:
+  tm-monitoring-data:
+
+networks:
+  tm-net:
+    external: true   # <-- use the pre-existing network that MSSQL is already on
