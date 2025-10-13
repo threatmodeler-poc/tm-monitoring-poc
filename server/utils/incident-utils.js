@@ -30,7 +30,9 @@ class IncidentService {
                 return;
             }
 
-            let serviceType = await IncidentService.GetMonitorServiceType(monitor);
+            let serviceType = await IncidentService.GetMonitorServiceType(
+                monitor
+            );
 
             const title = `Service Down: ${serviceType}`;
             const description = `Service ${serviceType} is down. Error: ${
@@ -155,7 +157,9 @@ class IncidentService {
      */
     static async resolveIncidentForRecovery(monitor) {
         try {
-            let serviceType = await IncidentService.GetMonitorServiceType(monitor);
+            let serviceType = await IncidentService.GetMonitorServiceType(
+                monitor
+            );
 
             if (monitor.incident_id) {
                 let apiResonse = await IncidentService.callExternalIncidentAPI(
@@ -302,7 +306,7 @@ class IncidentService {
                         updatedBy: incidentData.updatedBy,
                         incidentStatus: incidentData.incidentStatus,
                         incidentImpact: incidentData.incidentImpact,
-                        serviceType: incidentData.serviceType
+                        serviceType: incidentData.serviceType,
                     },
                     {
                         headers: {
@@ -396,8 +400,6 @@ class IncidentService {
     /**
      * Check wether monitor has incident or not
      * @param monitorId
-     * @param {string} incidentId IncidentId from ddb
-     * @param isResolved
      * @returns {Promise<string>}
      */
     static async GetMonitorIncident(monitorId) {
@@ -411,18 +413,26 @@ class IncidentService {
      * @returns {Promise<string>}
      */
     static async GetMonitorServiceType(monitor) {
-        let tag = await R.findOne("tag", " name = ? ", [ "ServiceType" ]);
-        if (tag?.id <= 0) {
+        try {
+            let tag = await R.findOne("tag", " name = ? ", [ "ServiceType" ]);
+
+            if (tag?.id > 0) {
+                let monitorTag = await R.findOne(
+                    "monitor_tag",
+                    "monitor_id = ? AND tag_id = ?",
+                    [ monitor.id, tag.id ]
+                );
+
+                if (monitorTag?.serviceType) {
+                    return monitorTag.serviceType;
+                }
+
+                return "THREATMODELER";
+            }
+            return "THREATMODELER";
+        } catch (err) {
             return "THREATMODELER";
         }
-
-        let monitorTag = await R.findOne("monitor_tag", "monitor_id = ? AND tag_id = ?", [ monitor.id, tag.id ]);
-
-        if (monitorTag?.id < 0) {
-            return "THREATMODELER";
-        }
-
-        return monitorTag.value;
     }
 }
 
