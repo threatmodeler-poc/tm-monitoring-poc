@@ -1,0 +1,15 @@
+{
+    "debug.node.autoAttach": "on",
+    "debug.javascript.usePreview": true,
+    "debug.inlineValues": "auto",
+    "debug.showBreakpointsInOverviewRuler": true,
+    "debug.openDebug": "openOnDebugBreak",
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit"
+    },
+    "files.associations": {
+        "*.js": "javascript"
+    },
+    "javascript.preferences.includePackageJsonAutoImports": "auto",
+    "typescript.preferences.includePackageJsonAutoImports": "auto"
+}
