@@ -423,8 +423,8 @@ class IncidentService {
                     [ monitor.id, tag.id ]
                 );
 
-                if (monitorTag?.serviceType) {
-                    return monitorTag.serviceType;
+                if (monitorTag?.value) {
+                    return monitorTag.value;
                 }
 
                 return "THREATMODELER";
