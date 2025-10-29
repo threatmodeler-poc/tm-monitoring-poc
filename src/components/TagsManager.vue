@@ -117,8 +117,9 @@
                                 :options="serviceTypeOptions"
                                 :multiple="false"
                                 :searchable="true"
-                                :placeholder="$t('Select Service Type')"
+                                :placeholder="loadingServiceTypes ? $t('Loading service types...') : $t('Select Service Type')"
                                 :allow-empty="false"
+                                :disabled="loadingServiceTypes"
                                 data-testid="tag-value-select"
                             />
                             <input
@@ -204,6 +205,14 @@ export default {
                 color: null,
                 value: "",
             },
+            /**
+             * @type {Array<string>} Dynamic service types fetched from API
+             */
+            dynamicServiceTypes: [],
+            /**
+             * @type {boolean} Loading state for service types API call
+             */
+            loadingServiceTypes: false,
         };
     },
     computed: {
@@ -273,11 +282,6 @@ export default {
          */
         isServiceTypeTag() {
             const tagName = this.newDraftTag.select ? this.newDraftTag.select.name : this.newDraftTag.name;
-            console.log("isServiceTypeTag check:", {
-                tagName,
-                select: this.newDraftTag.select,
-                name: this.newDraftTag.name
-            });
             return tagName && tagName.toLowerCase() === "servicetype";
         },
         /**
@@ -285,7 +289,8 @@ export default {
          * @returns {Array<string>} Array of service type options
          */
         serviceTypeOptions() {
-            return [
+            // Return dynamic service types if available, otherwise fallback to static list
+            return this.dynamicServiceTypes.length > 0 ? this.dynamicServiceTypes : [
                 "THREATMODELER",
                 "THREATMODELER_IDSVR",
                 "THREATMODELER_REPORTING",
@@ -367,6 +372,7 @@ export default {
     mounted() {
         this.modal = new Modal(this.$refs.modal);
         this.getExistingTags();
+        this.fetchServiceTypes(); // Pre-fetch service types on component mount
     },
     beforeUnmount() {
         this.cleanupModal();
@@ -380,6 +386,7 @@ export default {
             this.stagedForBatchAdd = [];
             this.clearDraftTag();
             this.getExistingTags();
+            this.fetchServiceTypes(); // Fetch service types when modal opens
             this.modal.show();
         },
         /**
@@ -394,6 +401,36 @@ export default {
                     this.$root.toastError(res.msg);
                 }
             });
+        },
+        /**
+         * Fetch service types dynamically from API
+         * @returns {Promise<void>}
+         */
+        async fetchServiceTypes() {
+            if (this.loadingServiceTypes) {
+                return; // Prevent multiple concurrent requests
+            }
+
+            this.loadingServiceTypes = true;
+            try {
+                const response = await fetch("https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region");
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (data.serviceTypes && Array.isArray(data.serviceTypes)) {
+                    this.dynamicServiceTypes = data.serviceTypes;
+                } else {
+                    console.warn("API response does not contain valid serviceTypes array");
+                }
+            } catch (error) {
+                console.error("Failed to fetch service types:", error);
+                this.$root.toastError("Failed to load service types. Using default values.");
+                // Keep the fallback values in serviceTypeOptions computed property
+            } finally {
+                this.loadingServiceTypes = false;
+            }
         },
         /**
          * Delete the specified tag
