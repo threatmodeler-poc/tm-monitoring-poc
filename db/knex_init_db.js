@@ -560,7 +560,6 @@ ALTER TABLE monitor
     log.info("mariadb", "Created basic tables for MariaDB");
 }
 
-
 /**
  * Create tables for MSSQL database without CASCADE constraints
  * @returns {Promise<void>}

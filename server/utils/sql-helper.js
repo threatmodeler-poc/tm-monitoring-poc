@@ -12,21 +12,29 @@ class SQLHelper {
         try {
             const knex = R.knex;
             if (!knex || !knex.client) {
-                return 'unknown';
+                return "unknown";
             }
-            
+
             const clientName = knex.client.constructor.name.toLowerCase();
-            
+
             // Map client names to database types
-            if (clientName.includes('mssql')) return 'mssql';
-            if (clientName.includes('mysql')) return 'mysql';
-            if (clientName.includes('sqlite')) return 'sqlite';
-            if (clientName.includes('postgres')) return 'postgresql';
-            
+            if (clientName.includes("mssql")) {
+                return "mssql";
+            }
+            if (clientName.includes("mysql")) {
+                return "mysql";
+            }
+            if (clientName.includes("sqlite")) {
+                return "sqlite";
+            }
+            if (clientName.includes("postgres")) {
+                return "postgresql";
+            }
+
             return clientName;
         } catch (error) {
-            console.warn('SQLHelper: Could not determine database type, defaulting to sqlite');
-            return 'sqlite';
+            console.warn("SQLHelper: Could not determine database type, defaulting to sqlite");
+            return "sqlite";
         }
     }
 
@@ -37,16 +45,16 @@ class SQLHelper {
      */
     static escapeIdentifier(identifier) {
         const dbType = this.getDatabaseType();
-        
+
         switch (dbType) {
-            case 'mssql':
+            case "mssql":
                 return `[${identifier}]`;
-            case 'mysql2client':
-            case 'mysql':
+            case "mysql2client":
+            case "mysql":
                 return `\`${identifier}\``;
-            case 'sqlite3':
+            case "sqlite3":
                 return `\`${identifier}\``;
-            case 'postgresql':
+            case "postgresql":
                 return `"${identifier}"`;
             default:
                 return `\`${identifier}\``;
@@ -60,12 +68,12 @@ class SQLHelper {
      */
     static convertQuery(query) {
         const dbType = this.getDatabaseType();
-        
-        if (dbType === 'mssql') {
+
+        if (dbType === "mssql") {
             // Replace backticks with square brackets for MSSQL
-            return query.replace(/`([^`]+)`/g, '[$1]');
+            return query.replace(/`([^`]+)`/g, "[$1]");
         }
-        
+
         // For other databases, keep backticks as is
         return query;
     }
@@ -111,19 +119,19 @@ class SQLHelper {
      */
     static getCurrentTimestamp() {
         const dbType = this.getDatabaseType();
-        
+
         switch (dbType) {
-            case 'mssql':
-                return 'GETDATE()';
-            case 'mysql2client':
-            case 'mysql':
-                return 'NOW()';
-            case 'sqlite3':
+            case "mssql":
+                return "GETDATE()";
+            case "mysql2client":
+            case "mysql":
+                return "NOW()";
+            case "sqlite3":
                 return "DATETIME('now')";
-            case 'postgresql':
-                return 'NOW()';
+            case "postgresql":
+                return "NOW()";
             default:
-                return 'NOW()';
+                return "NOW()";
         }
     }
 
@@ -135,9 +143,9 @@ class SQLHelper {
      */
     static getLimitClause(limit, offset = 0) {
         const dbType = this.getDatabaseType();
-        
+
         switch (dbType) {
-            case 'mssql':
+            case "mssql":
                 return offset > 0 ? `OFFSET ${offset} ROWS FETCH NEXT ${limit} ROWS ONLY` : `TOP ${limit}`;
             default:
                 return offset > 0 ? `LIMIT ${limit} OFFSET ${offset}` : `LIMIT ${limit}`;

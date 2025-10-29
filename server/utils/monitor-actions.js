@@ -10,16 +10,16 @@ const { sleep, getRandomInt } = require("../../src/util");
  */
 async function startMonitor(userID, monitorID) {
     // Ownership check
-    let row = await R.getRow("SELECT id FROM monitor WHERE id = ? AND user_id = ? ", [monitorID, userID]);
+    let row = await R.getRow("SELECT id FROM monitor WHERE id = ? AND user_id = ? ", [ monitorID, userID ]);
     if (!row) {
         throw new Error("You do not own this monitor.");
     }
-    await R.exec("UPDATE monitor SET active = 1 WHERE id = ? AND user_id = ? ", [monitorID, userID]);
-    
+    await R.exec("UPDATE monitor SET active = 1 WHERE id = ? AND user_id = ? ", [ monitorID, userID ]);
+
     // Get monitor as proper Monitor instance
-    let monitorData = await R.getRow("SELECT * FROM monitor WHERE id = ? ", [monitorID]);
-    let monitor = R.convertToBeans("monitor", [monitorData])[0];
-    
+    let monitorData = await R.getRow("SELECT * FROM monitor WHERE id = ? ", [ monitorID ]);
+    let monitor = R.convertToBeans("monitor", [ monitorData ])[0];
+
     if (monitor.id in server.monitorList) {
         await server.monitorList[monitor.id].stop();
     }

@@ -9,7 +9,7 @@ class TwoFA {
      * @returns {Promise<void>}
      */
     static async disable2FA(userID) {
-        return await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET twofa_status = 0 WHERE id = ? `, [
+        return await R.exec(`UPDATE ${Database.escapeIdentifier("user")} SET twofa_status = 0 WHERE id = ? `, [
             userID,
         ]);
     }

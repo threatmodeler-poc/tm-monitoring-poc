@@ -77,7 +77,7 @@ class DnsMonitorType extends MonitorType {
         }
 
         if (monitor.dns_last_result !== dnsMessage && dnsMessage !== undefined) {
-            await R.exec(`UPDATE ${Database.escapeIdentifier('monitor')} SET dns_last_result = ? WHERE id = ? `, [ dnsMessage, monitor.id ]);
+            await R.exec(`UPDATE ${Database.escapeIdentifier("monitor")} SET dns_last_result = ? WHERE id = ? `, [ dnsMessage, monitor.id ]);
         }
 
         heartbeat.msg = dnsMessage;

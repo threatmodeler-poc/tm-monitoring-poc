@@ -144,7 +144,7 @@ export default {
                 this.assignMonitorUrlParser(data);
                 // Ensure active property is properly converted to boolean for all monitors
                 Object.values(data).forEach(monitor => {
-                    if (monitor.hasOwnProperty('active')) {
+                    if (monitor.hasOwnProperty("active")) {
                         monitor.active = !!monitor.active;
                     }
                 });
@@ -155,7 +155,7 @@ export default {
                 this.assignMonitorUrlParser(data);
                 Object.entries(data).forEach(([ monitorID, updatedMonitor ]) => {
                     // Ensure active property is properly converted to boolean
-                    if (updatedMonitor.hasOwnProperty('active')) {
+                    if (updatedMonitor.hasOwnProperty("active")) {
                         updatedMonitor.active = !!updatedMonitor.active;
                     }
                     this.monitorList[monitorID] = updatedMonitor;

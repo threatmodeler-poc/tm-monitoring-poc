@@ -43,7 +43,7 @@ class Proxy {
 
         // When proxy is default update deactivate old default proxy
         if (proxy.default) {
-            await R.exec(`UPDATE proxy SET ${Database.escapeIdentifier('default')} = 0 WHERE ${Database.escapeIdentifier('default')} = 1`);
+            await R.exec(`UPDATE proxy SET ${Database.escapeIdentifier("default")} = 0 WHERE ${Database.escapeIdentifier("default")} = 1`);
         }
 
         bean.user_id = userID;

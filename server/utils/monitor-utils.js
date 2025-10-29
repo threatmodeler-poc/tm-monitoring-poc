@@ -9,7 +9,7 @@ const Database = require("../database");
  * @returns {Promise<void>}
  */
 async function updateMonitorNotification(monitorID, notificationIDList) {
-    await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_notification')} WHERE ${Database.escapeIdentifier('monitor_id')} = ? `, [
+    await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_notification")} WHERE ${Database.escapeIdentifier("monitor_id")} = ? `, [
         monitorID,
     ]);
 

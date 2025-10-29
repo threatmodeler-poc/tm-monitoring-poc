@@ -379,7 +379,7 @@ class UptimeCalculator {
 
         // Import database utils for upsert functionality
         const { upsert } = require("./utils/database-utils");
-        
+
         // Use upsert to handle concurrent access properly
         const beanData = {
             monitor_id: this.monitorID,
@@ -391,8 +391,8 @@ class UptimeCalculator {
             pingMax: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
             extras: null
         };
-        
-        let bean = await upsert("stat_daily", beanData, ["monitor_id", "timestamp"]);
+
+        let bean = await upsert("stat_daily", beanData, [ "monitor_id", "timestamp" ]);
 
         this.lastDailyStatBean = bean;
         return this.lastDailyStatBean;
@@ -410,7 +410,7 @@ class UptimeCalculator {
 
         // Import database utils for upsert functionality
         const { upsert } = require("./utils/database-utils");
-        
+
         // Use upsert to handle concurrent access properly
         const beanData = {
             monitor_id: this.monitorID,
@@ -422,8 +422,8 @@ class UptimeCalculator {
             pingMax: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
             extras: null
         };
-        
-        let bean = await upsert("stat_hourly", beanData, ["monitor_id", "timestamp"]);
+
+        let bean = await upsert("stat_hourly", beanData, [ "monitor_id", "timestamp" ]);
 
         this.lastHourlyStatBean = bean;
         return this.lastHourlyStatBean;
@@ -441,7 +441,7 @@ class UptimeCalculator {
 
         // Import database utils for upsert functionality
         const { upsert } = require("./utils/database-utils");
-        
+
         // Use upsert to handle concurrent access properly
         const beanData = {
             monitor_id: this.monitorID,
@@ -453,9 +453,9 @@ class UptimeCalculator {
             pingMax: 0,  // Default to 0 instead of null for MSSQL NOT NULL constraint
             extras: null
         };
-        
-        let bean = await upsert("stat_minutely", beanData, ["monitor_id", "timestamp"]);
-        
+
+        let bean = await upsert("stat_minutely", beanData, [ "monitor_id", "timestamp" ]);
+
         this.lastMinutelyStatBean = bean;
         return this.lastMinutelyStatBean;
     }

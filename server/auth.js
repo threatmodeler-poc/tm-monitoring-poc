@@ -26,7 +26,7 @@ exports.login = async function (username, password) {
     if (user && passwordHash.verify(password, user.password)) {
         // Upgrade the hash to bcrypt
         if (passwordHash.needRehash(user.password)) {
-            await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET password = ? WHERE id = ? `, [
+            await R.exec(`UPDATE ${Database.escapeIdentifier("user")} SET password = ? WHERE id = ? `, [
                 await passwordHash.generate(password),
                 user.id,
             ]);
@@ -68,7 +68,7 @@ async function verifyAPIKey(key) {
 
 /**
  * Get user associated with API key
- * @param {string} key API key to verify  
+ * @param {string} key API key to verify
  * @returns {Promise<object|null>} User object or null if invalid
  */
 async function getUserFromAPIKey(key) {
@@ -106,7 +106,7 @@ async function getUserFromAPIKey(key) {
 
     // Get the user associated with this API key
     let user = await R.findOne("user", " id = ? AND active = 1 ", [ apiKeyRecord.user_id ]);
-    
+
     return user;
 }
 

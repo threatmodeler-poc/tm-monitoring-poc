@@ -14,7 +14,7 @@ class User extends BeanModel {
      * @returns {Promise<void>}
      */
     static async resetPassword(userID, newPassword) {
-        await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET password = ? WHERE id = ? `, [
+        await R.exec(`UPDATE ${Database.escapeIdentifier("user")} SET password = ? WHERE id = ? `, [
             await passwordHash.generate(newPassword),
             userID
         ]);
@@ -28,7 +28,7 @@ class User extends BeanModel {
     async resetPassword(newPassword) {
         const hashedPassword = await passwordHash.generate(newPassword);
 
-        await R.exec(`UPDATE ${Database.escapeIdentifier('user')} SET password = ? WHERE id = ? `, [
+        await R.exec(`UPDATE ${Database.escapeIdentifier("user")} SET password = ? WHERE id = ? `, [
             hashedPassword,
             this.id
         ]);

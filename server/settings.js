@@ -52,7 +52,7 @@ class Settings {
             return v;
         }
 
-        let value = await R.getCell(`SELECT ${Database.escapeIdentifier('value')} FROM setting WHERE ${Database.escapeIdentifier('key')} = ? `, [
+        let value = await R.getCell(`SELECT ${Database.escapeIdentifier("value")} FROM setting WHERE ${Database.escapeIdentifier("key")} = ? `, [
             key,
         ]);
 
@@ -80,7 +80,7 @@ class Settings {
      */
     static async set(key, value, type = null) {
 
-        let bean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, [
+        let bean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [
             key,
         ]);
         if (!bean) {
@@ -100,7 +100,7 @@ class Settings {
      * @returns {Promise<Bean>} Settings
      */
     static async getSettings(type) {
-        let list = await R.getAll(`SELECT ${Database.escapeIdentifier('key')}, ${Database.escapeIdentifier('value')} FROM setting WHERE ${Database.escapeIdentifier('type')} = ? `, [
+        let list = await R.getAll(`SELECT ${Database.escapeIdentifier("key")}, ${Database.escapeIdentifier("value")} FROM setting WHERE ${Database.escapeIdentifier("type")} = ? `, [
             type,
         ]);
 
@@ -129,7 +129,7 @@ class Settings {
         let promiseList = [];
 
         for (let key of keyList) {
-            let bean = await R.findOne("setting", ` ${Database.escapeIdentifier('key')} = ? `, [
+            let bean = await R.findOne("setting", ` ${Database.escapeIdentifier("key")} = ? `, [
                 key
             ]);
 

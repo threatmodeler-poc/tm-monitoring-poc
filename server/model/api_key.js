@@ -71,8 +71,8 @@ class APIKey extends BeanModel {
         bean.expires = key.expires;
 
         // Use the database utility to store with guaranteed ID
-        bean = await storeWithAutoFallback(bean, "api_key", ["user_id", "name", "key"]);
-        
+        bean = await storeWithAutoFallback(bean, "api_key", [ "user_id", "name", "key" ]);
+
         log.debug("apikeys", `Stored API key with ID: ${bean.id}`);
         return bean;
     }

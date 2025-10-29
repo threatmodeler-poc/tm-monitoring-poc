@@ -246,7 +246,7 @@ class Notification {
      * @returns {Promise<void>}
      */
     static async delete(notificationID, userID) {
-        let bean = await R.findOne("notification", ` ${Database.escapeIdentifier('id')} = ? AND ${Database.escapeIdentifier('user_id')} = ? `, [
+        let bean = await R.findOne("notification", ` ${Database.escapeIdentifier("id")} = ? AND ${Database.escapeIdentifier("user_id")} = ? `, [
             notificationID,
             userID,
         ]);
@@ -256,7 +256,7 @@ class Notification {
         }
 
         // First delete all monitor_notification relationships that reference this notification
-        await R.exec(`DELETE FROM ${Database.escapeIdentifier('monitor_notification')} WHERE ${Database.escapeIdentifier('notification_id')} = ?`, [
+        await R.exec(`DELETE FROM ${Database.escapeIdentifier("monitor_notification")} WHERE ${Database.escapeIdentifier("notification_id")} = ?`, [
             notificationID
         ]);
 
