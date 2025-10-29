@@ -6,6 +6,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --legacy-peer-deps
 COPY . .
+
+# Set build-time environment variables
+ARG VUE_APP_SERVICE_TYPES_API_URL=https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region
+ENV VUE_APP_SERVICE_TYPES_API_URL=$VUE_APP_SERVICE_TYPES_API_URL
+
 RUN npm run build
 RUN npm prune --omit=dev
 
@@ -15,6 +20,7 @@ FROM node:22-alpine
 ENV NODE_ENV=production
 ENV STATUS_PAGE_REFRESH_INTERVAL=30
 ENV INCIDENT_API_URL=https://6ekzvbsy1i.execute-api.us-east-1.amazonaws.com/incident
+ENV VUE_APP_SERVICE_TYPES_API_URL=https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region
 
 WORKDIR /app
 

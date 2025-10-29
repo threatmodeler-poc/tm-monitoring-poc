@@ -14,6 +14,7 @@ export default defineConfig({
     server: {
         port: 3000,
     },
+    envPrefix: "VUE_APP_",
     define: {
         "FRONTEND_VERSION": JSON.stringify(process.env.npm_package_version),
         "process.env": {},

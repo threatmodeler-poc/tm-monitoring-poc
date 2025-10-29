@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VUE_APP_SERVICE_TYPES_API_URL: ${VUE_APP_SERVICE_TYPES_API_URL:-https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region}
     image: tm-monitoring-tool:1.0.0
     container_name: tm-monitor
     restart: unless-stopped
@@ -14,6 +16,7 @@ services:
       - ./data:/app/data
     environment:
       NODE_ENV: production
+      VUE_APP_SERVICE_TYPES_API_URL: ${VUE_APP_SERVICE_TYPES_API_URL:-https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region}
     networks:
       - tm-net
   # Removed default uptime-kuma image; building via tm-monitoring-tool service

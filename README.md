@@ -103,6 +103,41 @@ If you need more options or need to browse via a reverse proxy, please read:
 
 https://github.com/louislam/uptime-kuma/wiki/%F0%9F%94%A7-How-to-Install
 
+## 🔧 Environment Configuration
+
+### Environment Variables
+
+ThreatModeler Monitor supports the following environment variables:
+
+- `VUE_APP_SERVICE_TYPES_API_URL`: API endpoint for fetching service types dynamically (default: `https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region`)
+
+### Using Environment Variables
+
+#### Development
+Create a `.env` file in the root directory:
+```bash
+VUE_APP_SERVICE_TYPES_API_URL=https://your-api-endpoint.com/region
+```
+
+#### Docker
+Set environment variables when running the container:
+```bash
+docker run -d --restart=always -p 3001:3001 \
+  -e VUE_APP_SERVICE_TYPES_API_URL=https://your-api-endpoint.com/region \
+  -v uptime-kuma:/app/data --name uptime-kuma tm-monitoring-tool:1.0.0
+```
+
+#### Docker Compose
+Set environment variables in your `.env` file and they will be automatically picked up by docker-compose:
+```bash
+VUE_APP_SERVICE_TYPES_API_URL=https://your-api-endpoint.com/region
+```
+
+Then run:
+```bash
+docker-compose up -d
+```
+
 ## 🆙 How to Update
 
 Please read:

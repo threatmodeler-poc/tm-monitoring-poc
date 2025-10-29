@@ -413,7 +413,8 @@ export default {
 
             this.loadingServiceTypes = true;
             try {
-                const response = await fetch("https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region");
+                const apiUrl = import.meta.env.VUE_APP_SERVICE_TYPES_API_URL || "https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region";
+                const response = await fetch(apiUrl);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
