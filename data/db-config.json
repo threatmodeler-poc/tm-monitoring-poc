@@ -1,8 +1,8 @@
 {
     "type": "mssql",
     "port": 1433,
-    "hostname": "localhost",
-    "username": "application_user",
-    "password": "applic@ti0nUserP@ssw0rd",
+    "hostname": "tmdev-mum.czxk1lxclrfm.ap-south-1.rds.amazonaws.com",
+    "username": "tm_dev_admin",
+    "password": "6dL1ggCjs3jdhvQhsVYzb0Al04ZfyR",
     "dbName": "tm-monitor"
 }
