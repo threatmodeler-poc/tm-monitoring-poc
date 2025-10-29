@@ -1306,6 +1306,7 @@ class Monitor extends BeanModel {
         // * ? -> ANY STATUS = important [isFirstBeat]
         // UP -> PENDING = not important
         // * UP -> DOWN = important
+        // * UP -> MAINTENANCE = important (Fixed: notify when going into maintenance)
         // UP -> UP = not important
         // PENDING -> PENDING = not important
         // * PENDING -> DOWN = important
@@ -1313,16 +1314,17 @@ class Monitor extends BeanModel {
         // DOWN -> PENDING = this case not exists
         // DOWN -> DOWN = not important
         // * DOWN -> UP = important
+        // * DOWN -> MAINTENANCE = important (Fixed: notify when down monitor goes into maintenance)
         // MAINTENANCE -> MAINTENANCE = not important
-        // MAINTENANCE -> UP = not important
+        // * MAINTENANCE -> UP = important (Fixed: notify when coming out of maintenance to up)
         // * MAINTENANCE -> DOWN = important
-        // DOWN -> MAINTENANCE = not important
-        // UP -> MAINTENANCE = not important
         return isFirstBeat ||
             (previousBeatStatus === MAINTENANCE && currentBeatStatus === DOWN) ||
             (previousBeatStatus === UP && currentBeatStatus === DOWN) ||
             (previousBeatStatus === DOWN && currentBeatStatus === UP) ||
-            (previousBeatStatus === PENDING && currentBeatStatus === DOWN);
+            (previousBeatStatus === PENDING && currentBeatStatus === DOWN) ||
+            (previousBeatStatus === UP && currentBeatStatus === MAINTENANCE) ||
+            (previousBeatStatus === MAINTENANCE && currentBeatStatus === UP);
     }
 
     /**
@@ -1339,8 +1341,14 @@ class Monitor extends BeanModel {
             let text;
             if (bean.status === UP) {
                 text = "✅ Up";
-            } else {
+            } else if (bean.status === DOWN) {
                 text = "🔴 Down";
+            } else if (bean.status === MAINTENANCE) {
+                text = "🔧 Maintenance";
+            } else if (bean.status === PENDING) {
+                text = "⏳ Pending";
+            } else {
+                text = "❓ Unknown";
             }
 
             let msg = `[${monitor.name}] [${text}] ${bean.msg}`;

@@ -1,5 +1,5 @@
 const { Liquid } = require("liquidjs");
-const { DOWN } = require("../../src/util");
+const { DOWN, UP, MAINTENANCE, PENDING } = require("../../src/util");
 
 class NotificationProvider {
 
@@ -75,7 +75,17 @@ class NotificationProvider {
 
         let serviceStatus = "⚠️ Test";
         if (heartbeatJSON !== null) {
-            serviceStatus = (heartbeatJSON["status"] === DOWN) ? "🔴 Down" : "✅ Up";
+            if (heartbeatJSON["status"] === DOWN) {
+                serviceStatus = "🔴 Down";
+            } else if (heartbeatJSON["status"] === UP) {
+                serviceStatus = "✅ Up";
+            } else if (heartbeatJSON["status"] === MAINTENANCE) {
+                serviceStatus = "� Maintenance";
+            } else if (heartbeatJSON["status"] === PENDING) {
+                serviceStatus = "⏳ Pending";
+            } else {
+                serviceStatus = "❓ Unknown";
+            }
         }
 
         const context = {
