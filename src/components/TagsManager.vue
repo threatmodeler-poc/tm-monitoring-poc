@@ -109,7 +109,20 @@
                             </div>
                         </div>
                         <div class="mb-2">
+                            <vue-multiselect
+                                v-if="isServiceTypeTag"
+                                v-model="newDraftTag.value"
+                                class="form-control-multiselect"
+                                :class="{'is-invalid': validateDraftTag.invalid && validateDraftTag.messageKey === 'tagAlreadyOnMonitor'}"
+                                :options="serviceTypeOptions"
+                                :multiple="false"
+                                :searchable="true"
+                                :placeholder="$t('Select Service Type')"
+                                :allow-empty="false"
+                                data-testid="tag-value-select"
+                            />
                             <input
+                                v-else
                                 v-model="newDraftTag.value" class="form-control"
                                 :class="{'is-invalid': validateDraftTag.invalid && validateDraftTag.messageKey === 'tagAlreadyOnMonitor'}"
                                 :placeholder="$t('value (optional)')"
@@ -253,6 +266,34 @@ export default {
          */
         colorOptions() {
             return colorOptions(this);
+        },
+        /**
+         * Checks if the current tag being created/edited is a ServiceType tag
+         * @returns {boolean} True if the tag name is "ServiceType"
+         */
+        isServiceTypeTag() {
+            const tagName = this.newDraftTag.select ? this.newDraftTag.select.name : this.newDraftTag.name;
+            console.log("isServiceTypeTag check:", {
+                tagName,
+                select: this.newDraftTag.select,
+                name: this.newDraftTag.name
+            });
+            return tagName && tagName.toLowerCase() === "servicetype";
+        },
+        /**
+         * Provides the service type options for ServiceType tags
+         * @returns {Array<string>} Array of service type options
+         */
+        serviceTypeOptions() {
+            return [
+                "THREATMODELER",
+                "THREATMODELER_IDSVR",
+                "THREATMODELER_REPORTING",
+                "THREATMODELER_OBA",
+                "THREATMODELER_GCPACCELERATOR",
+                "THREATMODELER_RULESENGINE",
+                "THREATMODELER_EMBEDDEDDIAGRAM"
+            ];
         },
         /**
          * Validates the current draft tag based on several conditions.
@@ -648,5 +689,13 @@ export default {
 
 .modal-body {
     padding: 1.5rem;
+}
+
+.form-control-multiselect {
+    min-height: calc(1.5em + 0.75rem + 2px);
+}
+
+.form-control-multiselect.is-invalid {
+    border-color: #dc3545;
 }
 </style>

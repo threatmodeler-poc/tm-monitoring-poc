@@ -1,0 +1,8 @@
+{
+    "type": "mssql",
+    "port": 1433,
+    "hostname": "tm-mssql",
+    "username": "application_user",
+    "password": "applic@ti0nUserP@ssw0rd",
+    "dbName": "tm-monitor"
+}
