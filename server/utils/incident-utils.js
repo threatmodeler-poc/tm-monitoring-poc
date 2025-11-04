@@ -50,7 +50,7 @@ class IncidentService {
                     incidentStatus:
                         heartbeat.status === MAINTENANCE
                             ? "Maintenance"
-                            : "Identified",
+                            : "Outage",
                     incidentImpact:
                         heartbeat.status === MAINTENANCE ? "Minor" : "Major",
                     monitorId: monitor.id,
