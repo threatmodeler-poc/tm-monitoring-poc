@@ -173,8 +173,8 @@ router.post("/monitor/resolve-incident", async (req, res) => {
 
         res.json({ ok: true,
             msg: "Incident Resolved",
-            monitorID: monitorId,
-            incidentID: incidentId
+            monitorId: monitorId,
+            incidentId: incidentId
         });
     } catch (e) {
         console.error("Error Resolving Monitor Incident:", e.message);
