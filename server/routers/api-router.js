@@ -600,22 +600,37 @@ router.get("/api/uptime/url", async (request, response) => {
             throw new Error("URL parameter is required");
         }
         const requestedDuration = request.query.duration !== undefined ? request.query.duration : "24h";
-        // Use a LIKE query to support partial URL matching
-        const beans = await R.find(
-            "monitor",
-            "url LIKE ?",
-            [ `%${targetUrl}%` ]
-        );
+
+        const intervals = requestedDuration.split("|");
+
         const results = [];
-        for (const bean of beans) {
-            const uptimeCalculator = await UptimeCalculator.getUptimeCalculator(bean.id);
-            const data = uptimeCalculator.getDataByDuration(requestedDuration);
-            results.push({
-                monitorId: bean.id,
-                uptime: data.uptime,
-                avgPing: data.avgPing,
-            });
+        for (let index = 0; index < intervals.length; index++) {
+            const interval = intervals[index];
+
+            // Use a LIKE query to support partial URL matching
+            const beans = await R.find("monitor", "url LIKE ?", [
+                `%${targetUrl}%`,
+            ]);
+
+            const temp = {
+                duration: interval,
+                data: []
+            };
+
+            for (const bean of beans) {
+                const uptimeCalculator =
+                    await UptimeCalculator.getUptimeCalculator(bean.id);
+                const data = uptimeCalculator.getDataByDuration(interval);
+                temp.data.push({
+                    monitorId: bean.id,
+                    uptime: data.uptime,
+                    avgPing: data.avgPing,
+                });
+            }
+
+            results.push(temp);
         }
+
         response.json({
             ok: true,
             url: targetUrl,
