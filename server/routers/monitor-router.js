@@ -108,4 +108,79 @@ router.post("/monitor", async (req, res) => {
     }
 });
 
+router.post("/monitor/resolve-incident", async (req, res) => {
+    try {
+        console.log("Resolving monitor's incident...\n");
+
+        const authHeader = req.headers["authorization"];
+        const apiKeyHeader = req.headers["x-api-key"];
+
+        if (!authHeader && !apiKeyHeader) {
+            return res
+                .status(401)
+                .json({
+                    ok: false,
+                    msg: "Missing authentication. Provide either Authorization header with Bearer token or X-API-Key header",
+                });
+        }
+
+        let user = null;
+        let userID = null;
+
+        // Try JWT authentication first (if Authorization header is present)
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+            const token = authHeader.substring(7);
+            try {
+                const decoded = jwt.verify(token, server.jwtSecret);
+                user = await R.findOne(
+                    "user",
+                    " username = ? AND active = 1 ",
+                    [ decoded.username ]
+                );
+                if (
+                    user &&
+                    decoded.h === shake256(user.password, SHAKE256_LENGTH)
+                ) {
+                    userID = user.id;
+                }
+            } catch (err) {
+                // JWT validation failed, will try API key next if available
+            }
+        }
+
+        // If JWT authentication failed or not provided, try API key authentication
+        if (!user && apiKeyHeader) {
+            user = await getUserFromAPIKey(apiKeyHeader);
+            if (user) {
+                userID = user.id;
+            }
+        }
+
+        // If both authentication methods failed
+        if (!user || !userID) {
+            return res
+                .status(401)
+                .json({
+                    ok: false,
+                    msg: "Invalid or expired authentication credentials",
+                });
+        }
+
+        const monitorId = parseInt(req.query.monitorId, 0);
+        const incidentId = req.query.incidentId ?? "";
+
+        await R.exec("UPDATE monitor SET incident_id = null WHERE id = ? AND incident_id = ?", [ monitorId, incidentId ]);
+
+        res.json({ ok: true,
+            msg: "Incident Resolved",
+            monitorID: monitorId,
+            incidentID: incidentId
+        });
+    } catch (e) {
+        console.error("Error Resolving Monitor Incident:", e.message);
+        res.status(500).json({ ok: false,
+            msg: e.message });
+    }
+});
+
 module.exports = router;
