@@ -28,6 +28,23 @@ async function testClientConfigurationAPI() {
             console.log(`Client Name: ${response.data.clientName}`);
             console.log(`Client URL: ${response.data.clientBaseUrl}`);
 
+            // Display group information
+            if (response.data.group) {
+                console.log("\n👥 Group Monitor Created:");
+                console.log(`  Group Monitor ID: ${response.data.group.groupID}`);
+                console.log(`  Group Name: ${response.data.group.groupName}`);
+                console.log(`  Group Type: ${response.data.group.groupType || "monitor"}`);
+                console.log(`  Child Monitor Associations: ${response.data.group.monitorAssociations?.length || 0}`);
+
+                // Show association details
+                if (response.data.group.monitorAssociations) {
+                    response.data.group.monitorAssociations.forEach((assoc, idx) => {
+                        const status = assoc.success ? "✅" : "❌";
+                        console.log(`    ${status} Monitor ${assoc.monitorId} → Parent: ${response.data.group.groupID}`);
+                    });
+                }
+            }
+
             response.data.monitors.forEach((monitorResult, index) => {
                 console.log(`\n📊 Monitor ${index + 1} (${monitorResult.type.toUpperCase()}):`);
 

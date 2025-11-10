@@ -467,6 +467,23 @@ router.post("/configure/client", async (req, res) => {
         }
         //#endregion
 
+        // Create a group for the client and add all monitors to it
+        let groupResult = null;
+        try {
+            const monitorIds = results
+                .filter(result => result.monitor && result.monitor.monitorID)
+                .map(result => result.monitor.monitorID);
+
+            if (monitorIds.length > 0) {
+                groupResult = await createGroupWithMonitors(clientData.clientName, monitorIds, userID);
+            }
+        } catch (groupError) {
+            console.error("Failed to create group:", groupError.message);
+            groupResult = {
+                error: groupError.message
+            };
+        }
+
         // Prepare response
         const response = {
             ok: true,
@@ -474,6 +491,7 @@ router.post("/configure/client", async (req, res) => {
             clientName: clientData.clientName,
             clientBaseUrl: clientData.clientBaseUrl,
             monitors: results,
+            group: groupResult
         };
 
         res.json(response);
@@ -597,6 +615,85 @@ async function createMonitorInternal(monitor, userID) {
     }
 
     return response;
+}
+
+/**
+ * Create a group monitor and associate monitors with it as children
+ * @param {string} groupName Name of the group
+ * @param {number[]} monitorIds Array of monitor IDs to add to the group
+ * @param {number} userID User ID
+ * @returns {Promise<object>} Group creation result
+ */
+async function createGroupWithMonitors(groupName, monitorIds, userID) {
+    // Create a group monitor (similar to how EditMonitor.vue creates groups)
+    const groupMonitor = {
+        type: "group",
+        name: groupName,
+        user_id: userID,
+        active: true,
+        interval: 60, // 1 minute default for group monitors
+        retryInterval: 60,
+        maxretries: 0,
+        timeout: 48,
+        resendInterval: 0,
+        weight: 1000, // Default weight for groups
+        description: `Group for ${groupName} monitors`
+    };
+
+    // Create the group monitor using the internal function
+    const groupMonitorResult = await createMonitorInternal(groupMonitor, userID);
+
+    if (!groupMonitorResult.ok) {
+        throw new Error(`Failed to create group monitor: ${groupMonitorResult.msg || "Unknown error"}`);
+    }
+
+    const groupMonitorID = groupMonitorResult.monitorID;
+    console.log(`Created group monitor "${groupName}" with ID: ${groupMonitorID}`);
+
+    // Associate monitors with the group by setting their parent field
+    const monitorAssociations = [];
+
+    for (const monitorId of monitorIds) {
+        try {
+            // Update the monitor to set its parent to the group monitor
+            await R.exec("UPDATE monitor SET parent = ? WHERE id = ?", [ groupMonitorID, monitorId ]);
+
+            monitorAssociations.push({
+                monitorId: monitorId,
+                success: true
+            });
+
+            console.log(`Set monitor ${monitorId} parent to group ${groupMonitorID}`);
+        } catch (associationError) {
+            console.warn(`Failed to set parent for monitor ${monitorId}:`, associationError.message);
+            monitorAssociations.push({
+                monitorId: monitorId,
+                success: false,
+                error: associationError.message
+            });
+        }
+    }
+
+    // Send updates to connected clients for the group monitor and all child monitors
+    try {
+        const socketLike = { userID: userID };
+        await server.sendUpdateMonitorIntoList(socketLike, groupMonitorID);
+
+        // Update all child monitors in the client list
+        for (const monitorId of monitorIds) {
+            await server.sendUpdateMonitorIntoList(socketLike, monitorId);
+        }
+    } catch (updateError) {
+        console.warn("Failed to send monitor list updates:", updateError.message);
+    }
+
+    return {
+        ok: true,
+        groupID: groupMonitorID,
+        groupName: groupName,
+        groupType: "monitor", // Indicate this is a monitor-based group
+        monitorAssociations: monitorAssociations
+    };
 }
 
 module.exports = router;

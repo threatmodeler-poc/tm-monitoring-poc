@@ -293,27 +293,64 @@ curl -X POST http://localhost:3001/api/configure/client \
         "ok": true,
         "msg": "successAdded",
         "monitorID": 123,
-        "name": "Example Client - HTTP Monitor"
+        "name": "Example Client WEB"
+      }
+    },
+    {
+      "type": "http", 
+      "monitor": {
+        "ok": true,
+        "msg": "successAdded",
+        "monitorID": 124,
+        "name": "Example Client IDSVR"
       }
     },
     {
       "type": "push",
       "monitor": {
         "ok": true,
-        "msg": "successAdded",
-        "monitorID": 124,
-        "name": "Example Client - Push Monitor",
+        "msg": "successAdded", 
+        "monitorID": 125,
+        "name": "Example Client RulesEngine",
         "pushURL": "http://localhost:3001/api/push/abc123token?status=up&msg=OK&ping="
       }
     }
-  ]
+  ],
+  "group": {
+    "ok": true,
+    "groupID": 10,
+    "groupName": "Example Client",
+    "groupType": "monitor",
+    "monitorAssociations": [
+      {
+        "monitorId": 123,
+        "success": true
+      },
+      {
+        "monitorId": 124, 
+        "success": true
+      },
+      {
+        "monitorId": 125,
+        "success": true
+      }
+    ]
+  }
 }
 ```
 
 **What this API does:**
-- Creates an HTTP monitor for the client's base URL with ServiceType tag "Web"
-- Creates a Push monitor for the client with ServiceType tag "Application"
+- Creates multiple monitors for different ThreatModeler components:
+  - THREATMODELER (main web application)
+  - THREATMODELER_IDSVR (identity server)  
+  - THREATMODELER_REPORTING (reporting service)
+  - THREATMODELER_OBA (OBA component)
+  - THREATMODELER_GCPACCELERATOR (GCP accelerator)
+  - THREATMODELER_RULESENGINE (rules engine - push monitor)
+  - THREATMODELER_EMBEDDEDDIAGRAM (embedded diagram)
+- Creates a group monitor with the client name and sets all monitors as children
+- Group monitors show aggregated status of all child monitors
 - Uses the same authentication and validation as the `/monitor` API
-- Returns both monitor details in a single response
+- Returns all monitor details and group information in a single response
 
 ```
