@@ -183,7 +183,7 @@ curl -H "Authorization: Bearer your_jwt_token_here" ...
 
 ### Optional Fields
 - `interval`: Check interval in seconds (default: 60)
-- `maxretries`: Maximum retries before marking as down (default: 3) 
+- `maxretries`: Maximum retries before marking as down (default: 3)
 - `timeout`: Request timeout in seconds (default: 10)
 - `active`: Whether monitor is active (default: true)
 - `method`: HTTP method for HTTP monitors (default: "GET")
@@ -265,5 +265,55 @@ Each tag object should contain:
 - `value`: The ServiceType value to assign to the monitor
 
 **Note**: The ServiceType tag must already exist in the database (created via migration). Only the value needs to be provided in the API request.
+
+## Client Configuration API
+
+### Configure Client with HTTP and Push Monitors
+```bash
+curl -X POST http://localhost:3001/api/configure/client \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: uk1_your_api_key_here" \
+  -d '{
+    "clientBaseUrl": "https://client.example.com",
+    "clientName": "Example Client"
+  }'
+```
+
+**Response:**
+```json
+{
+  "ok": true,
+  "msg": "Client configuration completed",
+  "clientName": "Example Client",
+  "clientBaseUrl": "https://client.example.com",
+  "monitors": [
+    {
+      "type": "http",
+      "monitor": {
+        "ok": true,
+        "msg": "successAdded",
+        "monitorID": 123,
+        "name": "Example Client - HTTP Monitor"
+      }
+    },
+    {
+      "type": "push",
+      "monitor": {
+        "ok": true,
+        "msg": "successAdded",
+        "monitorID": 124,
+        "name": "Example Client - Push Monitor",
+        "pushURL": "http://localhost:3001/api/push/abc123token?status=up&msg=OK&ping="
+      }
+    }
+  ]
+}
+```
+
+**What this API does:**
+- Creates an HTTP monitor for the client's base URL with ServiceType tag "Web"
+- Creates a Push monitor for the client with ServiceType tag "Application"
+- Uses the same authentication and validation as the `/monitor` API
+- Returns both monitor details in a single response
 
 ```
