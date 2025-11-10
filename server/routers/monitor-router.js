@@ -9,6 +9,8 @@ const server = UptimeKumaServer.getInstance();
 const { updateMonitorNotification } = require("../utils/monitor-utils");
 const { startMonitor } = require("../utils/monitor-actions");
 const { storeWithAutoFallback } = require("../utils/database-utils");
+const { genSecret } = require("../../src/util");
+const { setting } = require("../util-server");
 
 // POST /api/monitor - Add a new monitor
 router.post("/monitor", async (req, res) => {
@@ -85,6 +87,11 @@ router.post("/monitor", async (req, res) => {
         bean.import(monitor);
         bean.user_id = userID;
 
+        // Generate push token for push type monitors if not provided
+        if (monitor.type === "push" && !monitor.pushToken) {
+            bean.pushToken = genSecret(32); // Use 32 character length like the frontend
+        }
+
         bean.validate();
 
         // Use the database utility to store with guaranteed ID
@@ -98,9 +105,34 @@ router.post("/monitor", async (req, res) => {
         if (monitor.active !== false) {
             await startMonitor(userID, bean.id);
         }
-        res.json({ ok: true,
+
+        // Prepare response
+        let response = {
+            ok: true,
             msg: "successAdded",
-            monitorID: bean.id });
+            monitorID: bean.id
+        };
+
+        // If it's a push type monitor, include the push URL
+        if (monitor.type === "push" && bean.pushToken) {
+            try {
+                const baseURL = await setting("primaryBaseURL");
+                if (baseURL) {
+                    response.pushURL = `${baseURL}/api/push/${bean.pushToken}?status=up&msg=OK&ping=`;
+                } else {
+                    // Fallback: construct URL from request
+                    const protocol = req.protocol;
+                    const host = req.get("host");
+                    response.pushURL = `${protocol}://${host}/api/push/${bean.pushToken}?status=up&msg=OK&ping=`;
+                }
+            } catch (error) {
+                console.warn("Could not generate push URL:", error.message);
+                // Still include the token so users can construct the URL manually
+                response.pushToken = bean.pushToken;
+            }
+        }
+
+        res.json(response);
     } catch (e) {
         console.error("Error adding monitor:", e.message);
         res.status(500).json({ ok: false,
