@@ -195,3 +195,75 @@ curl -H "Authorization: Bearer your_jwt_token_here" ...
 - `upsideDown`: Invert the status (default: false)
 - `description`: Monitor description
 - `notificationIDList`: Object of notification IDs to enable
+- `tags`: Array of tag objects to associate with the monitor
+
+## Tag Examples
+
+### Add Monitor with ServiceType Tag
+```bash
+curl -X POST http://localhost:3001/api/monitor \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: uk1_your_api_key_here" \
+  -d '{
+    "name": "Production API",
+    "type": "http",
+    "url": "https://api.example.com",
+    "interval": 60,
+    "active": true,
+    "tags": [
+      {
+        "value": "API"
+      }
+    ]
+  }'
+```
+
+### Add Monitor with Different ServiceType Value
+```bash
+curl -X POST http://localhost:3001/api/monitor \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: uk1_your_api_key_here" \
+  -d '{
+    "name": "Database Monitor",
+    "type": "port",
+    "hostname": "db.example.com",
+    "port": 5432,
+    "interval": 120,
+    "active": true,
+    "tags": [
+      {
+        "value": "Database"
+      }
+    ]
+  }'
+```
+
+### Add Monitor with Multiple ServiceType Tags
+```bash
+curl -X POST http://localhost:3001/api/monitor \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: uk1_your_api_key_here" \
+  -d '{
+    "name": "Web Application",
+    "type": "http",
+    "url": "https://app.example.com",
+    "interval": 60,
+    "active": true,
+    "tags": [
+      {
+        "value": "Web"
+      },
+      {
+        "value": "Frontend"
+      }
+    ]
+  }'
+```
+
+### Tag Data Format
+Each tag object should contain:
+- `value`: The ServiceType value to assign to the monitor
+
+**Note**: The ServiceType tag must already exist in the database (created via migration). Only the value needs to be provided in the API request.
+
+```

@@ -62,6 +62,10 @@ router.post("/monitor", async (req, res) => {
         let notificationIDList = monitor.notificationIDList;
         delete monitor.notificationIDList;
 
+        // Extract tags from monitor object if present
+        let tags = monitor.tags || [];
+        delete monitor.tags;
+
         // Use same logic as websocket 'add' event
         monitor.accepted_statuscodes = Array.isArray(monitor.accepted_statuscodes) ? monitor.accepted_statuscodes : [ "200-299" ];
         monitor.kafkaProducerBrokers = Array.isArray(monitor.kafkaProducerBrokers) ? monitor.kafkaProducerBrokers : [];
@@ -100,6 +104,33 @@ router.post("/monitor", async (req, res) => {
         console.log(`Stored monitor with ID: ${bean.id}`);
 
         await updateMonitorNotification(bean.id, notificationIDList);
+
+        // Handle ServiceType tag if provided
+        if (tags && Array.isArray(tags) && tags.length > 0) {
+            // Find the ServiceType tag from the database
+            const serviceTypeTag = await R.findOne("tag", "name = ?", [ "ServiceType" ]);
+
+            if (serviceTypeTag) {
+                for (const tagData of tags) {
+                    // Only process if a value is provided
+                    if (tagData.value) {
+                        try {
+                            await R.exec("INSERT INTO monitor_tag (tag_id, monitor_id, value) VALUES (?, ?, ?)", [
+                                serviceTypeTag.id,
+                                bean.id,
+                                tagData.value
+                            ]);
+                        } catch (tagError) {
+                            // Log error but don't fail the entire monitor creation
+                            console.warn(`Failed to associate ServiceType tag with monitor ${bean.id}:`, tagError.message);
+                        }
+                    }
+                }
+            } else {
+                console.warn("ServiceType tag not found in database. Make sure migrations have been run.");
+            }
+        }
+
         // Create a socket-like object with userID for the server method
         await server.sendUpdateMonitorIntoList({ userID: userID }, bean.id);
         if (monitor.active !== false) {
