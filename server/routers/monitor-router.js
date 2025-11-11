@@ -603,15 +603,12 @@ async function createMonitorInternal(monitor, userID) {
             const baseURL = await setting("primaryBaseURL");
             if (baseURL) {
                 response.pushURL = `${baseURL}/api/push/${bean.pushToken}?status=up&msg=OK&ping=`;
-            } else {
-                // For internal calls, we don't have req object, so we'll just include the token
-                response.pushToken = bean.pushToken;
             }
         } catch (error) {
             console.warn("Could not generate push URL:", error.message);
-            // Still include the token so users can construct the URL manually
-            response.pushToken = bean.pushToken;
         }
+        // For internal calls, we don't have req object, so we'll just include the token
+        response.pushToken = bean.pushToken;
     }
 
     return response;

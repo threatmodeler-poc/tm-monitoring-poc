@@ -38,11 +38,11 @@ This implementation provides comprehensive monitoring capabilities for ThreatMod
 
 | Component | Type | Service Type | Description |
 |-----------|------|--------------|-------------|
-| THREATMODELER | HTTP | WEB | Main web application |
-| THREATMODELER_IDSVR | HTTP | IDSVR | Identity server |
-| THREATMODELER_REPORTING | HTTP | REPORTING | Reporting service |
-| THREATMODELER_OBA | HTTP | OBA | OBA component |
-| THREATMODELER_GCPACCELERATOR | HTTP | GCPACCELERATOR | GCP accelerator |
+| THREATMODELER | JSON-QUERY | WEB | Main web application |
+| THREATMODELER_IDSVR | JSON-QUERY | IDSVR | Identity server |
+| THREATMODELER_REPORTING | JSON-QUERY | REPORTING | Reporting service |
+| THREATMODELER_OBA | JSON-QUERY | OBA | OBA component |
+| THREATMODELER_GCPACCELERATOR | JSON-QUERY | GCPACCELERATOR | GCP accelerator |
 | THREATMODELER_RULESENGINE | Push | RULESENGINE | Rules engine (push notifications) |
 | THREATMODELER_EMBEDDEDDIAGRAM | HTTP | EMBEDDEDDIAGRAM | Embedded diagram service |
 
