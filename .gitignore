@@ -21,3 +21,5 @@ extra/exe-builder/obj
 /data/error.log
 /data/kuma.db
 /data/db-config.json.bak
+
+pushToEcr.ps1

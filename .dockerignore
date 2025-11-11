@@ -49,4 +49,7 @@ dist-ssr
 #!/data/.gitkeep
 #.vscode
 
+# Extra
+pushToEcr.ps1
+
 ### End of .gitignore content
