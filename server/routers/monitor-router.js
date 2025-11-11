@@ -264,7 +264,7 @@ router.post("/configure/client", async (req, res) => {
                 userID
             );
             results.push({
-                type: "http",
+                type: "json-query",
                 monitor: httpMonitorResult,
             });
         } catch (httpError) {
@@ -297,7 +297,7 @@ router.post("/configure/client", async (req, res) => {
                 userID
             );
             results.push({
-                type: "http",
+                type: "json-query",
                 monitor: httpMonitorResult,
             });
         } catch (httpError) {
@@ -330,7 +330,7 @@ router.post("/configure/client", async (req, res) => {
                 userID
             );
             results.push({
-                type: "http",
+                type: "json-query",
                 monitor: httpMonitorResult,
             });
         } catch (httpError) {
@@ -363,7 +363,7 @@ router.post("/configure/client", async (req, res) => {
                 userID
             );
             results.push({
-                type: "http",
+                type: "json-query",
                 monitor: httpMonitorResult,
             });
         } catch (httpError) {
@@ -396,7 +396,7 @@ router.post("/configure/client", async (req, res) => {
                 userID
             );
             results.push({
-                type: "http",
+                type: "json-query",
                 monitor: httpMonitorResult,
             });
         } catch (httpError) {
