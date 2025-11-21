@@ -53,12 +53,12 @@ router.all("/api/push/:pushToken", async (request, response) => {
         let statusString = request.query.status || "up";
         const statusFromParam = (statusString === "up") ? UP : DOWN;
 
-        let monitor = await R.findOne("monitor", " push_token = ? AND active = 1 ", [
+        let monitor = await R.findOne("monitor", " push_token = ? ", [
             pushToken
         ]);
 
         if (! monitor) {
-            throw new Error("Monitor not found or not active.");
+            throw new Error("Monitor not found");
         }
 
         const previousHeartbeat = await Monitor.getPreviousHeartbeat(monitor.id);
@@ -75,6 +75,8 @@ router.all("/api/push/:pushToken", async (request, response) => {
         if (previousHeartbeat) {
             isFirstBeat = false;
             bean.duration = dayjs(bean.time).diff(dayjs(previousHeartbeat.time), "second");
+        } else {
+            await R.exec("UPDATE monitor SET active = ? WHERE id = ?", [ 1, monitor.id ]);
         }
 
         if (await Monitor.isUnderMaintenance(monitor.id)) {
