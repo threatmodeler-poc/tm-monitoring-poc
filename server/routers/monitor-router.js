@@ -11,6 +11,7 @@ const { startMonitor } = require("../utils/monitor-actions");
 const { storeWithAutoFallback } = require("../utils/database-utils");
 const { genSecret } = require("../../src/util");
 const { setting } = require("../util-server");
+const IncidentService = require("../utils/incident-utils");
 
 // POST /api/monitor - Add a new monitor
 router.post("/monitor", async (req, res) => {
@@ -484,6 +485,12 @@ router.post("/configure/client", async (req, res) => {
             };
         }
 
+        results.forEach(async item => {
+            if (item.type === "push") {
+                await pauseMonitorTemporary(item.monitor.monitorID, userID);
+            }
+        });
+
         // Prepare response
         const response = {
             ok: true,
@@ -585,7 +592,10 @@ async function createMonitorInternal(monitor, userID) {
 
     // Create a socket-like object with userID for the server method
     await server.sendUpdateMonitorIntoList({ userID: userID }, bean.id);
-    if (monitor.active !== false) {
+
+    // Don't start push monitors immediately - they will be activated when first ping arrives
+    // This prevents creating false DOWN beats for push monitors
+    if (monitor.active !== false && monitor.type !== "push") {
         await startMonitor(userID, bean.id);
     }
 
@@ -691,6 +701,36 @@ async function createGroupWithMonitors(groupName, monitorIds, userID) {
         groupType: "monitor", // Indicate this is a monitor-based group
         monitorAssociations: monitorAssociations
     };
+}
+
+/**
+ * @param {number} monitorId id of the monitor
+ * @param {number} userId id of user
+ * @returns {Promise<void>}
+ */
+async function pauseMonitorTemporary(monitorId, userId) {
+    try {
+        let row = await R.getRow(
+            "SELECT id FROM monitor WHERE id = ? AND user_id = ? ",
+            [ monitorId, userId ]
+        );
+
+        if (!row) {
+            throw new Error("You do not own this monitor.");
+        }
+
+        await R.exec("UPDATE monitor SET active = 0 WHERE id = ? AND user_id = ? ", [
+            monitorId,
+            userId,
+        ]);
+
+        if (monitorId in server.monitorList) {
+            await server.monitorList[monitorId].stop();
+            server.monitorList[monitorId].active = 0;
+        }
+
+        server.sendUpdateMonitorIntoList({ userID: userId }, monitorId);
+    } catch (error) {}
 }
 
 module.exports = router;

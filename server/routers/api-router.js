@@ -76,7 +76,23 @@ router.all("/api/push/:pushToken", async (request, response) => {
             isFirstBeat = false;
             bean.duration = dayjs(bean.time).diff(dayjs(previousHeartbeat.time), "second");
         } else {
+            // First beat - activate the monitor in database only, don't start monitoring loop
+            // The monitoring loop for push monitors creates false DOWN beats, so we avoid it
             await R.exec("UPDATE monitor SET active = ? WHERE id = ?", [ 1, monitor.id ]);
+
+            // Update the monitor object in memory if it exists
+            if (monitor.id in server.monitorList) {
+                server.monitorList[monitor.id].active = 1;
+            }
+
+            // Notify connected clients about the monitor status change
+            try {
+                await server.sendUpdateMonitorIntoList({ userID: monitor.user_id }, monitor.id);
+            } catch (notifyError) {
+                console.warn("Failed to notify clients about monitor activation:", notifyError.message);
+            }
+
+            console.log(`Push monitor ${monitor.name} (ID: ${monitor.id}) activated on first ping (database only)`);
         }
 
         if (await Monitor.isUnderMaintenance(monitor.id)) {
