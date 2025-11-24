@@ -240,7 +240,28 @@ router.post("/configure/client", async (req, res) => {
             });
         }
 
+        // Check if monitors already exist for this client base URL
         const instanceUrl = `${clientData.clientBaseUrl}/api/tminfo`;
+        const existingMonitors = await R.find("monitor", " user_id = ? AND url LIKE ? ", [
+            userID,
+            `${clientData.clientBaseUrl}%`
+        ]);
+
+        if (existingMonitors && existingMonitors.length > 0) {
+            return res.status(409).json({
+                ok: false,
+                msg: `Monitors already exist for client base URL: ${clientData.clientBaseUrl}. Found ${existingMonitors.length} existing monitor(s).`,
+                existingMonitors: existingMonitors.map(monitor => ({
+                    id: monitor.id,
+                    name: monitor.name,
+                    url: monitor.url,
+                    type: monitor.type,
+                    active: monitor.active,
+                    jsonPath: monitor.json_path,
+                    expectedValue: monitor.expected_value
+                }))
+            });
+        }
 
         const results = [];
 
