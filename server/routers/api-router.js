@@ -635,7 +635,21 @@ router.get("/api/uptime/url", async (request, response) => {
                 data: []
             };
 
-            for (const bean of beans) {
+            let itemsToIterate = beans;
+
+            const groupIds = [ ...new Set(beans.map(item => item.parent)) ];
+
+            if (groupIds && groupIds.length == 1) {
+                const groupBeans = await R.find("monitor", "id = ?", [
+                    beans[0]?.parent
+                ]);
+
+                if (groupBeans?.length > 0) {
+                    itemsToIterate = groupBeans;
+                }
+            }
+
+            for (const bean of itemsToIterate) {
                 const uptimeCalculator =
                     await UptimeCalculator.getUptimeCalculator(bean.id);
                 const data = uptimeCalculator.getDataByDuration(interval);
