@@ -250,7 +250,7 @@ router.post("/configure/client", async (req, res) => {
         if (existingMonitors && existingMonitors.length > 0) {
             return res.status(409).json({
                 ok: false,
-                msg: `Monitors already exist for client base URL: ${clientData.clientBaseUrl}. Found ${existingMonitors.length} existing monitor(s).`,
+                msg: `Monitors already exist for client: ${clientData.clientName}. Found ${existingMonitors.length} existing monitor(s).`,
                 existingMonitors: existingMonitors.map(monitor => ({
                     id: monitor.id,
                     name: monitor.name,
@@ -515,11 +515,11 @@ router.post("/configure/client", async (req, res) => {
         // Prepare response
         const response = {
             ok: true,
-            msg: "Client configuration completed",
+            msg: "Monitors for client have been successfully configured.",
             clientName: clientData.clientName,
             clientBaseUrl: clientData.clientBaseUrl,
             monitors: results,
-            group: groupResult
+            group: groupResult,
         };
 
         res.json(response);
