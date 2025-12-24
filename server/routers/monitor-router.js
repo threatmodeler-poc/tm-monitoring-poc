@@ -279,6 +279,7 @@ router.post("/configure/client", async (req, res) => {
                 jsonPath: "data.tmServerState",
                 jsonPathOperator: "==",
                 expectedValue: "Healthy",
+                interval: clientData.interval ?? 60
             };
 
             const httpMonitorResult = await createMonitorInternal(
@@ -312,6 +313,7 @@ router.post("/configure/client", async (req, res) => {
                 jsonPath: "data.identityServerState",
                 jsonPathOperator: "==",
                 expectedValue: "Healthy",
+                interval: clientData.interval ?? 60,
             };
 
             const httpMonitorResult = await createMonitorInternal(
@@ -345,6 +347,7 @@ router.post("/configure/client", async (req, res) => {
                 jsonPath: "data.reportServerState",
                 jsonPathOperator: "==",
                 expectedValue: "Healthy",
+                interval: clientData.interval ?? 60,
             };
 
             const httpMonitorResult = await createMonitorInternal(
@@ -378,6 +381,7 @@ router.post("/configure/client", async (req, res) => {
                 jsonPath: "status",
                 jsonPathOperator: "==",
                 expectedValue: "healthy",
+                interval: clientData.interval ?? 60,
             };
 
             const httpMonitorResult = await createMonitorInternal(
@@ -411,6 +415,7 @@ router.post("/configure/client", async (req, res) => {
                 jsonPath: "status",
                 jsonPathOperator: "==",
                 expectedValue: "healthy",
+                interval: clientData.interval ?? 60,
             };
 
             const httpMonitorResult = await createMonitorInternal(
@@ -440,6 +445,7 @@ router.post("/configure/client", async (req, res) => {
                         value: "THREATMODELER_RULESENGINE",
                     },
                 ],
+                interval: clientData.interval ?? 60,
             };
 
             const httpMonitorResult = await createMonitorInternal(
@@ -470,6 +476,7 @@ router.post("/configure/client", async (req, res) => {
                         value: "THREATMODELER_EMBEDDEDDIAGRAM",
                     },
                 ],
+                interval: clientData.interval ?? 60,
             };
 
             const httpMonitorResult = await createMonitorInternal(
