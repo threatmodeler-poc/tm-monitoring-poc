@@ -151,6 +151,7 @@ const { resetChrome } = require("./monitor-types/real-browser-monitor-type");
 const { EmbeddedMariaDB } = require("./embedded-mariadb");
 const { SetupDatabase } = require("./setup-database");
 const { chartSocketHandler } = require("./socket-handlers/chart-socket-handler");
+const { loadAwsSecretsIfConfigured } = require("./aws-secrets");
 
 app.use(express.json());
 
@@ -172,6 +173,12 @@ let needSetup = false;
 (async () => {
     // Create a data directory
     Database.initDataDir(args);
+
+    // Optional: pull env + DB config from AWS Secrets Manager before DB setup
+    await loadAwsSecretsIfConfigured({
+        dataDir: Database.dataDir,
+        log,
+    });
 
     // Check if is chosen a database type
     let setupDatabase = new SetupDatabase(args, server);

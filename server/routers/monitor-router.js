@@ -12,6 +12,35 @@ const { storeWithAutoFallback } = require("../utils/database-utils");
 const { genSecret } = require("../../src/util");
 const { setting } = require("../util-server");
 const IncidentService = require("../utils/incident-utils");
+const axios = require("axios");
+
+// GET /api/service-types - Proxy service types API (configured via VUE_APP_SERVICE_TYPES_API_URL)
+router.get("/service-types", async (_req, res) => {
+    const apiUrl = process.env.VUE_APP_SERVICE_TYPES_API_URL;
+
+    if (!apiUrl) {
+        return res.status(500).json({
+            ok: false,
+            msg: "VUE_APP_SERVICE_TYPES_API_URL not configured",
+        });
+    }
+
+    try {
+        const response = await axios.get(apiUrl, {
+            timeout: 30000,
+            headers: {
+                "Accept": "application/json",
+            },
+        });
+
+        return res.json(response.data);
+    } catch (err) {
+        return res.status(502).json({
+            ok: false,
+            msg: `Failed to fetch service types: ${err?.message || err}`,
+        });
+    }
+});
 
 // POST /api/monitor - Add a new monitor
 router.post("/monitor", async (req, res) => {

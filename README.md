@@ -109,7 +109,16 @@ https://github.com/louislam/uptime-kuma/wiki/%F0%9F%94%A7-How-to-Install
 
 ThreatModeler Monitor supports the following environment variables:
 
+- `INCIDENT_API_URL`: External incident API endpoint (used by the backend)
 - `VUE_APP_SERVICE_TYPES_API_URL`: API endpoint for fetching service types dynamically (default: `https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region`)
+
+If you prefer to load these (and DB credentials) from AWS Secrets Manager at runtime:
+
+- `AWS_REGION` (or `AWS_DEFAULT_REGION`)
+- `AWS_SECRETS_MANAGER_SECRET_ID` (single JSON secret containing app/db config)
+  - Optional split secrets: `AWS_SECRETS_MANAGER_APP_SECRET_ID`, `AWS_SECRETS_MANAGER_DB_SECRET_ID`
+- `AWS_SECRETS_MANAGER_REQUIRED=1` to fail startup if secrets cannot be loaded
+- `AWS_SECRETS_MANAGER_OVERWRITE_DB_CONFIG=1` to overwrite an existing `data/db-config.json`
 
 ### Using Environment Variables
 

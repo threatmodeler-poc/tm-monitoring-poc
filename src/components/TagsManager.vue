@@ -413,8 +413,13 @@ export default {
 
             this.loadingServiceTypes = true;
             try {
-                const apiUrl = import.meta.env.VUE_APP_SERVICE_TYPES_API_URL || "https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region";
-                const response = await fetch(apiUrl);
+                // Prefer backend proxy so the URL can be supplied at runtime (e.g., via AWS Secrets Manager)
+                // Fallback to direct call for local/dev parity.
+                let response = await fetch("/api/service-types");
+                if (!response.ok) {
+                    const directUrl = import.meta.env.VUE_APP_SERVICE_TYPES_API_URL || "https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region";
+                    response = await fetch(directUrl);
+                }
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }

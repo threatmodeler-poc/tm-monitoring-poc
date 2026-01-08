@@ -68,6 +68,7 @@
         "build-run": "npm run build && node server/server.js"
     },
     "dependencies": {
+        "@aws-sdk/client-secrets-manager": "^3.964.0",
         "@grpc/grpc-js": "~1.8.22",
         "@louislam/ping": "~0.4.4-mod.1",
         "@louislam/sqlite3": "15.1.6",

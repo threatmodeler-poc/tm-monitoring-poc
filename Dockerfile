@@ -15,8 +15,13 @@ FROM node:22-alpine
 
 ENV NODE_ENV=production
 ENV STATUS_PAGE_REFRESH_INTERVAL=30
-ENV INCIDENT_API_URL=https://6ekzvbsy1i.execute-api.us-east-1.amazonaws.com/incident
-ENV VUE_APP_SERVICE_TYPES_API_URL=https://n6njvo4l45.execute-api.us-east-1.amazonaws.com/region
+ENV INCIDENT_UPDATED_BY=TMMonitorTool
+
+ENV AWS_REGION=us-east-1
+ENV AWS_SECRETS_MANAGER_SECRET_ID=TM_Monitor
+
+ENV AWS_SECRETS_MANAGER_REQUIRED=1
+ENV AWS_SECRETS_MANAGER_OVERWRITE_DB_CONFIG=1
 
 WORKDIR /app
 
@@ -36,10 +41,6 @@ COPY --from=builder --chown=node:node /app/dist   ./dist
 COPY --from=builder --chown=node:node /app/src    ./src
 # Copy database schema and migration files into the image
 COPY --from=builder --chown=node:node /app/db     ./db
-
-# 👇 Copy your db-config.json into the runtime image
-# (if it lives under /data/db-config.json in the source tree)
-COPY --from=builder --chown=node:node /app/data/db-config.json /app/data/db-config.json
 
 RUN ls
 
